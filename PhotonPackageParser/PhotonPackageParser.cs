@@ -39,10 +39,27 @@ namespace PhotonPackageParser
             int offset = 0;
             
             Protocol.Deserialize(out short peerId, source, ref offset);
-            ReadByte(out byte crcEnabled, source, ref offset);
+            ReadByte(out byte flags, source, ref offset);
             ReadByte(out byte commandCount, source, ref offset);
             Protocol.Deserialize(out int timestamp, source, ref offset);
             Protocol.Deserialize(out int challenge, source, ref offset);
+
+            bool isEncrypted = flags == 1;
+            bool isCrcEnabled = flags == 0xCC;
+
+            if (isEncrypted)
+            {
+                return;// Encrypted packages are not supported
+            }
+
+            if (isCrcEnabled)
+            {
+                Protocol.Deserialize(out int crc, source, ref offset);
+                if (crc != SupportClass.CalculateCrc(source, source.Length))
+                {
+                    return;// Invalid crc
+                }
+            }
 
             for (var commandIdx = 0; commandIdx < commandCount; commandIdx++)
             {
@@ -55,7 +72,7 @@ namespace PhotonPackageParser
             ReadByte(out byte commandType, source, ref offset);
             ReadByte(out byte channelId, source, ref offset);
             ReadByte(out byte commandFlags, source, ref offset);
-            offset++; // Skip 1 byte
+            offset++;// Skip 1 byte
             Protocol.Deserialize(out int commandLength, source, ref offset);
             Protocol.Deserialize(out int sequenceNumber, source, ref offset);
             commandLength -= CommandHeaderLength;
