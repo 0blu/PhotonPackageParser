@@ -15,4 +15,4 @@ Alternatively you can also just link `Photon3Unity3D.dll` if you have a Unity ba
 
 I strongly recommend to use NuGet to [get the library](https://www.nuget.org/packages/PhotonPackageParser/).
 
-See an example [here](https://github.com/0blu/PhotonPackageParser/blob/master/PhotonPackageParser.Example/Program.cs#L38).
+See an example [here](https://github.com/0blu/PhotonPackageParser/blob/master/PhotonPackageParser.Example/Program.cs).

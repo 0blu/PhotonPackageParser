@@ -1,4 +1,5 @@
-﻿using PcapDotNet.Core;
+﻿using System;
+using PcapDotNet.Core;
 using PcapDotNet.Packets;
 using PcapDotNet.Packets.IpV4;
 using PcapDotNet.Packets.Transport;
@@ -8,6 +9,7 @@ namespace PhotonPackageParser.Example
     class Program
     {
         private IPhotonPackageHandler _photonHandler;
+        private PhotonPackageParser _photonPackageParser;
 
         public static void Main(string[] args)
         {
@@ -17,7 +19,9 @@ namespace PhotonPackageParser.Example
         private void Start()
         {
             var device = PacketDeviceSelector.AskForPacketDevice();
+            // var device = new OfflinePacketDevice("dump.pcap"); // Your wireshark dump (IT MUST BE *.pcap)
             _photonHandler = new ExamplePackageHandler();
+            _photonPackageParser = new PhotonPackageParser(_photonHandler);
 
             using (PacketCommunicator communicator = device.Open(65536, PacketDeviceOpenAttributes.Promiscuous, 1000))
             {
@@ -35,7 +39,7 @@ namespace PhotonPackageParser.Example
                 return;
             }
 
-            PhotonPackageParser.ParsePhotonPackage(udp, _photonHandler);
+            _photonPackageParser.DeserializeMessageAndCallback(udp);
         }
     }
 }
