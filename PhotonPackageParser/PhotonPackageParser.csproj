@@ -42,8 +42,8 @@
     <Reference Include="PcapDotNet.Packets, Version=0.10.0.20603, Culture=neutral, PublicKeyToken=4b6f3e583145a652, processorArchitecture=MSIL">
       <HintPath>..\packages\PcapDotNet.0.10.2\lib\net40\PcapDotNet.Packets.dll</HintPath>
     </Reference>
-    <Reference Include="Photon3DotNet">
-      <HintPath>..\Photon3DotNet.dll</HintPath>
+    <Reference Include="Photon3Unity3D">
+      <HintPath>..\Photon3Unity3D.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

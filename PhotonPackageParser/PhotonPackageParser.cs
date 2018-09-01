@@ -54,7 +54,10 @@ namespace PhotonPackageParser
 
             if (isCrcEnabled)
             {
-                Protocol.Deserialize(out int crc, source, ref offset);
+                int ignoredOffset = 0;
+                Protocol.Deserialize(out int crc, source, ref ignoredOffset);
+                Protocol.Serialize(0, source, ref offset);
+
                 if (crc != SupportClass.CalculateCrc(source, source.Length))
                 {
                     return;// Invalid crc
