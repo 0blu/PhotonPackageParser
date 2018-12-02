@@ -4,9 +4,12 @@ namespace Photon
 {
     public static class Protocol
     {
+        #region fields
         private static readonly byte[] memoryDeserialize = new byte[4];
         private static readonly float[] memoryFloatBlock = new float[1];
+        #endregion
 
+        #region methods
         public static void Deserialize(out int value, byte[] source, ref int offset)
         {
             int num = offset;
@@ -118,5 +121,6 @@ namespace Photon
             }
             targetOffset += 4;
         }
+        #endregion
     }
 }
