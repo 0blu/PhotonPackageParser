@@ -6,7 +6,7 @@ namespace Photon
     public class StreamBuffer : Stream
     {
         #region fields
-        private readonly byte[] buffer;
+        private byte[] buffer;
         private int length;
         private int position;
         #endregion
@@ -158,7 +158,30 @@ namespace Photon
         #region private methods
         private bool CheckSize(int size)
         {
-            throw new NotImplementedException();
+            bool flag = size <= buffer.Length;
+            bool result;
+            if (flag)
+            {
+                result = false;
+            }
+            else
+            {
+                int num = buffer.Length;
+                bool flag2 = num == 0;
+                if (flag2)
+                {
+                    num = 1;
+                }
+                while (size > num)
+                {
+                    num *= 2;
+                }
+                byte[] dst = new byte[num];
+                Buffer.BlockCopy(buffer, 0, dst, 0, buffer.Length);
+                buffer = dst;
+                result = true;
+            }
+            return result;
         }
         #endregion
     }
