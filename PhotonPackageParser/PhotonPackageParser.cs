@@ -1,7 +1,7 @@
-﻿using System;
+﻿using PcapDotNet.Packets.Transport;
+using Photon;
+using System;
 using System.Collections.Generic;
-using ExitGames.Client.Photon;
-using PcapDotNet.Packets.Transport;
 using System.IO;
 using System.Linq;
 
@@ -18,11 +18,9 @@ namespace PhotonPackageParser
             public byte[] TotalPayload;
         }
 
-        private static readonly Protocol16 Protocol16 = new Protocol16();
-
         private const int CommandHeaderLength = 12;
         private const int PhotonHeaderLength = 12;
-        
+
         private readonly Dictionary<int, SegmentedPackage> _pendingSegments = new Dictionary<int, SegmentedPackage>();
 
         public PhotonPackageParser(IPhotonPackageHandler handler)
@@ -37,7 +35,7 @@ namespace PhotonPackageParser
 
             byte[] source = datagram.Payload.ToArray();
             int offset = 0;
-            
+
             Protocol.Deserialize(out short peerId, source, ref offset);
             ReadByte(out byte flags, source, ref offset);
             ReadByte(out byte commandCount, source, ref offset);

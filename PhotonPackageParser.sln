@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhotonPackageParser", "Phot
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhotonPackageParser.Example", "PhotonPackageParser.Example\PhotonPackageParser.Example.csproj", "{4A73912F-6450-4BB1-85D8-5571AAFB94F6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Photon", "Photon\Photon.csproj", "{391754C7-EE93-4651-9A4E-431EBF212FC1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{4A73912F-6450-4BB1-85D8-5571AAFB94F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4A73912F-6450-4BB1-85D8-5571AAFB94F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4A73912F-6450-4BB1-85D8-5571AAFB94F6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{391754C7-EE93-4651-9A4E-431EBF212FC1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{391754C7-EE93-4651-9A4E-431EBF212FC1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{391754C7-EE93-4651-9A4E-431EBF212FC1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{391754C7-EE93-4651-9A4E-431EBF212FC1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
