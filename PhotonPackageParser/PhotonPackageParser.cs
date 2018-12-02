@@ -10,6 +10,7 @@ namespace PhotonPackageParser
     public class PhotonPackageParser
     {
         private readonly IPhotonPackageHandler _handler;
+        private readonly Protocol16 protocol16 = new Protocol16();
 
         private class SegmentedPackage
         {
@@ -114,15 +115,15 @@ namespace PhotonPackageParser
             switch (messageType)
             {
                 case 2:// Operation Request
-                    var requestData = Protocol16.DeserializeOperationRequest(payload);
+                    var requestData = protocol16.DeserializeOperationRequest(payload);
                     _handler.OnRequest(requestData.OperationCode, requestData.Parameters);
                     break;
                 case 3:// Operation Response
-                    var responseData = Protocol16.DeserializeOperationResponse(payload);
+                    var responseData = protocol16.DeserializeOperationResponse(payload);
                     _handler.OnResponse(responseData.OperationCode, responseData.ReturnCode, responseData.Parameters);
                     break;
                 case 4:// Event
-                    var eventData = Protocol16.DeserializeEventData(payload);
+                    var eventData = protocol16.DeserializeEventData(payload);
                     _handler.OnEvent(eventData.Code, eventData.Parameters);
                     break;
             }
