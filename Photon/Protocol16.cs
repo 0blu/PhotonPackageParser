@@ -20,43 +20,6 @@ namespace Photon
         private readonly byte[] memDouble = new byte[8];
         private byte[] memString;
 
-        private object DeserializeCustom(StreamBuffer din, byte customTypeCode)
-        {
-            short num = this.DeserializeShort(din);
-            CustomType customType;
-            bool flag = Protocol.CodeDict.TryGetValue(customTypeCode, out customType);
-            object result;
-            if (flag)
-            {
-                bool flag2 = customType.DeserializeStreamFunction == null;
-                if (flag2)
-                {
-                    byte[] array = new byte[(int)num];
-                    din.Read(array, 0, (int)num);
-                    result = customType.DeserializeFunction(array);
-                }
-                else
-                {
-                    long position = din.Position;
-                    object obj = customType.DeserializeStreamFunction(din, num);
-                    int num2 = (int)(din.Position - position);
-                    bool flag3 = num2 != (int)num;
-                    if (flag3)
-                    {
-                        din.Position = position + (long)num;
-                    }
-                    result = obj;
-                }
-            }
-            else
-            {
-                byte[] array2 = new byte[(int)num];
-                din.Read(array2, 0, (int)num);
-                result = array2;
-            }
-            return result;
-        }
-
         private Type GetTypeOfCode(byte typeCode)
         {
             if (typeCode <= 42)
@@ -78,16 +41,12 @@ namespace Photon
                         return typeof(string[]);
                     case 98:
                         return typeof(byte);
-                    case 99:
-                        return typeof(CustomType);
                     case 100:
                         return typeof(double);
                     case 101:
                         return typeof(EventData);
                     case 102:
                         return typeof(float);
-                    case 104:
-                        return typeof(Hashtable);
                     case 105:
                         return typeof(int);
                     case 107:
@@ -116,11 +75,11 @@ namespace Photon
             throw new Exception("deserialize(): " + typeCode);
         }
 
+#warning refactoring!
         private GpType GetCodeOfType(Type type)
         {
             TypeCode typeCode = Type.GetTypeCode(type);
-            TypeCode typeCode2 = typeCode;
-            switch (typeCode2)
+            switch (typeCode)
             {
                 case TypeCode.Boolean:
                     return GpType.Boolean;
@@ -143,18 +102,16 @@ namespace Photon
                 case TypeCode.Double:
                     return GpType.Double;
                 default:
-                    if (typeCode2 == TypeCode.String)
+                    if (typeCode == TypeCode.String)
                     {
                         return GpType.String;
                     }
                     break;
             }
-            bool isArray = type.IsArray;
             GpType result;
-            if (isArray)
+            if (type.IsArray)
             {
-                bool flag = type == typeof(byte[]);
-                if (flag)
+                if (type == typeof(byte[]))
                 {
                     result = GpType.ByteArray;
                 }
@@ -165,43 +122,31 @@ namespace Photon
             }
             else
             {
-                bool flag2 = type == typeof(Hashtable);
-                if (flag2)
+                if (type.IsGenericType && typeof(Dictionary<,>) == type.GetGenericTypeDefinition())
                 {
-                    result = GpType.Hashtable;
+                    result = GpType.Dictionary;
                 }
                 else
                 {
-                    bool flag3 = type.IsGenericType && typeof(Dictionary<,>) == type.GetGenericTypeDefinition();
-                    if (flag3)
+                    if (type == typeof(EventData))
                     {
-                        result = GpType.Dictionary;
+                        result = GpType.EventData;
                     }
                     else
                     {
-                        bool flag4 = type == typeof(EventData);
-                        if (flag4)
+                        if (type == typeof(OperationRequest))
                         {
-                            result = GpType.EventData;
+                            result = GpType.OperationRequest;
                         }
                         else
                         {
-                            bool flag5 = type == typeof(OperationRequest);
-                            if (flag5)
+                            if (type == typeof(OperationResponse))
                             {
-                                result = GpType.OperationRequest;
+                                result = GpType.OperationResponse;
                             }
                             else
                             {
-                                bool flag6 = type == typeof(OperationResponse);
-                                if (flag6)
-                                {
-                                    result = GpType.OperationResponse;
-                                }
-                                else
-                                {
-                                    result = GpType.Unknown;
-                                }
+                                result = GpType.Unknown;
                             }
                         }
                     }
@@ -278,19 +223,12 @@ namespace Photon
                         return this.DeserializeStringArray(din);
                     case 98:
                         return this.DeserializeByte(din);
-                    case 99:
-                        {
-                            byte customTypeCode = (byte)din.ReadByte();
-                            return this.DeserializeCustom(din, customTypeCode);
-                        }
                     case 100:
                         return this.DeserializeDouble(din);
                     case 101:
                         return this.DeserializeEventData(din);
                     case 102:
                         return this.DeserializeFloat(din);
-                    case 104:
-                        return this.DeserializeHashTable(din);
                     case 105:
                         return this.DeserializeInteger(din);
                     case 107:
@@ -460,7 +398,7 @@ namespace Photon
             }
             return result;
         }
-
+#warning refactoring!
         private Array DeserializeArray(StreamBuffer din)
         {
             short num = this.DeserializeShort(din);
@@ -580,19 +518,6 @@ namespace Photon
                 array[i] = this.Deserialize(din, type);
             }
             return array;
-        }
-
-        private Hashtable DeserializeHashTable(StreamBuffer din)
-        {
-            int num = (int)this.DeserializeShort(din);
-            Hashtable hashtable = new Hashtable(num);
-            for (int i = 0; i < num; i++)
-            {
-                object key = this.Deserialize(din, (byte)din.ReadByte());
-                object value = this.Deserialize(din, (byte)din.ReadByte());
-                hashtable[key] = value;
-            }
-            return hashtable;
         }
 
         private IDictionary DeserializeDictionary(StreamBuffer din)
