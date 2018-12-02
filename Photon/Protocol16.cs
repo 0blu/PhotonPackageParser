@@ -75,7 +75,6 @@ namespace Photon
             throw new Exception("deserialize(): " + typeCode);
         }
 
-#warning refactoring!
         private GpType GetCodeOfType(Type type)
         {
             TypeCode typeCode = Type.GetTypeCode(type);
@@ -157,15 +156,15 @@ namespace Photon
 
         private Array CreateArrayByType(byte arrayType, short length)
         {
-            return Array.CreateInstance(this.GetTypeOfCode(arrayType), (int)length);
+            return Array.CreateInstance(GetTypeOfCode(arrayType), (int)length);
         }
 
         public OperationRequest DeserializeOperationRequest(StreamBuffer din)
         {
             return new OperationRequest
             {
-                OperationCode = this.DeserializeByte(din),
-                Parameters = this.DeserializeParameterTable(din)
+                OperationCode = DeserializeByte(din),
+                Parameters = DeserializeParameterTable(din)
             };
         }
 
@@ -173,10 +172,10 @@ namespace Photon
         {
             return new OperationResponse
             {
-                OperationCode = this.DeserializeByte(stream),
-                ReturnCode = this.DeserializeShort(stream),
-                DebugMessage = (this.Deserialize(stream, this.DeserializeByte(stream)) as string),
-                Parameters = this.DeserializeParameterTable(stream)
+                OperationCode = DeserializeByte(stream),
+                ReturnCode = DeserializeShort(stream),
+                DebugMessage = (Deserialize(stream, DeserializeByte(stream)) as string),
+                Parameters = DeserializeParameterTable(stream)
             };
         }
 
@@ -184,19 +183,19 @@ namespace Photon
         {
             return new EventData
             {
-                Code = this.DeserializeByte(din),
-                Parameters = this.DeserializeParameterTable(din)
+                Code = DeserializeByte(din),
+                Parameters = DeserializeParameterTable(din)
             };
         }
 
         private Dictionary<byte, object> DeserializeParameterTable(StreamBuffer stream)
         {
-            short num = this.DeserializeShort(stream);
+            short num = DeserializeShort(stream);
             Dictionary<byte, object> dictionary = new Dictionary<byte, object>((int)num);
             for (int i = 0; i < (int)num; i++)
             {
                 byte key = (byte)stream.ReadByte();
-                object value = this.Deserialize(stream, (byte)stream.ReadByte());
+                object value = Deserialize(stream, (byte)stream.ReadByte());
                 dictionary[key] = value;
             }
             return dictionary;
@@ -215,42 +214,42 @@ namespace Photon
             {
                 if (type == 68)
                 {
-                    return this.DeserializeDictionary(din);
+                    return DeserializeDictionary(din);
                 }
                 switch (type)
                 {
                     case 97:
-                        return this.DeserializeStringArray(din);
+                        return DeserializeStringArray(din);
                     case 98:
-                        return this.DeserializeByte(din);
+                        return DeserializeByte(din);
                     case 100:
-                        return this.DeserializeDouble(din);
+                        return DeserializeDouble(din);
                     case 101:
-                        return this.DeserializeEventData(din);
+                        return DeserializeEventData(din);
                     case 102:
-                        return this.DeserializeFloat(din);
+                        return DeserializeFloat(din);
                     case 105:
-                        return this.DeserializeInteger(din);
+                        return DeserializeInteger(din);
                     case 107:
-                        return this.DeserializeShort(din);
+                        return DeserializeShort(din);
                     case 108:
-                        return this.DeserializeLong(din);
+                        return DeserializeLong(din);
                     case 110:
-                        return this.DeserializeIntArray(din);
+                        return DeserializeIntArray(din);
                     case 111:
-                        return this.DeserializeBoolean(din);
+                        return DeserializeBoolean(din);
                     case 112:
-                        return this.DeserializeOperationResponse(din);
+                        return DeserializeOperationResponse(din);
                     case 113:
-                        return this.DeserializeOperationRequest(din);
+                        return DeserializeOperationRequest(din);
                     case 115:
-                        return this.DeserializeString(din);
+                        return DeserializeString(din);
                     case 120:
-                        return this.DeserializeByteArray(din);
+                        return DeserializeByteArray(din);
                     case 121:
-                        return this.DeserializeArray(din);
+                        return DeserializeArray(din);
                     case 122:
-                        return this.DeserializeObjectArray(din);
+                        return DeserializeObjectArray(din);
                 }
             }
             // TODO
@@ -280,11 +279,11 @@ namespace Photon
 
         public short DeserializeShort(StreamBuffer din)
         {
-            byte[] obj = this.memShort;
+            byte[] obj = memShort;
             short result;
             lock (obj)
             {
-                byte[] array = this.memShort;
+                byte[] array = memShort;
                 din.Read(array, 0, 2);
                 result = (short)((int)array[0] << 8 | (int)array[1]);
             }
@@ -293,11 +292,11 @@ namespace Photon
 
         private int DeserializeInteger(StreamBuffer din)
         {
-            byte[] obj = this.memInteger;
+            byte[] obj = memInteger;
             int result;
             lock (obj)
             {
-                byte[] array = this.memInteger;
+                byte[] array = memInteger;
                 din.Read(array, 0, 4);
                 result = ((int)array[0] << 24 | (int)array[1] << 16 | (int)array[2] << 8 | (int)array[3]);
             }
@@ -306,11 +305,11 @@ namespace Photon
 
         private long DeserializeLong(StreamBuffer din)
         {
-            byte[] obj = this.memLong;
+            byte[] obj = memLong;
             long result;
             lock (obj)
             {
-                byte[] array = this.memLong;
+                byte[] array = memLong;
                 din.Read(array, 0, 8);
                 bool isLittleEndian = BitConverter.IsLittleEndian;
                 if (isLittleEndian)
@@ -327,11 +326,11 @@ namespace Photon
 
         private float DeserializeFloat(StreamBuffer din)
         {
-            byte[] obj = this.memFloat;
+            byte[] obj = memFloat;
             float result;
             lock (obj)
             {
-                byte[] array = this.memFloat;
+                byte[] array = memFloat;
                 din.Read(array, 0, 4);
                 bool isLittleEndian = BitConverter.IsLittleEndian;
                 if (isLittleEndian)
@@ -350,11 +349,11 @@ namespace Photon
 
         private double DeserializeDouble(StreamBuffer din)
         {
-            byte[] obj = this.memDouble;
+            byte[] obj = memDouble;
             double result;
             lock (obj)
             {
-                byte[] array = this.memDouble;
+                byte[] array = memDouble;
                 din.Read(array, 0, 8);
                 bool isLittleEndian = BitConverter.IsLittleEndian;
                 if (isLittleEndian)
@@ -379,7 +378,7 @@ namespace Photon
 
         private string DeserializeString(StreamBuffer din)
         {
-            short num = this.DeserializeShort(din);
+            short num = DeserializeShort(din);
             bool flag = num == 0;
             string result;
             if (flag)
@@ -388,99 +387,66 @@ namespace Photon
             }
             else
             {
-                bool flag2 = this.memString == null || this.memString.Length < (int)num;
+                bool flag2 = memString == null || memString.Length < (int)num;
                 if (flag2)
                 {
-                    this.memString = new byte[(int)num];
+                    memString = new byte[(int)num];
                 }
-                din.Read(this.memString, 0, (int)num);
-                result = Encoding.UTF8.GetString(this.memString, 0, (int)num);
+                din.Read(memString, 0, (int)num);
+                result = Encoding.UTF8.GetString(memString, 0, (int)num);
             }
             return result;
         }
-#warning refactoring!
+
         private Array DeserializeArray(StreamBuffer din)
         {
-            short num = this.DeserializeShort(din);
+            short num = DeserializeShort(din);
             byte b = (byte)din.ReadByte();
-            bool flag = b == 121;
             Array array2;
-            if (flag)
+            if (b == 121)
             {
-                Array array = this.DeserializeArray(din);
+                Array array = DeserializeArray(din);
                 Type type = array.GetType();
                 array2 = Array.CreateInstance(type, (int)num);
                 array2.SetValue(array, 0);
                 for (short num2 = 1; num2 < num; num2 += 1)
                 {
-                    array = this.DeserializeArray(din);
+                    array = DeserializeArray(din);
                     array2.SetValue(array, (int)num2);
                 }
             }
             else
             {
-                bool flag2 = b == 120;
-                if (flag2)
+                if (b == 120)
                 {
                     array2 = Array.CreateInstance(typeof(byte[]), (int)num);
                     for (short num3 = 0; num3 < num; num3 += 1)
                     {
-                        Array value = this.DeserializeByteArray(din);
+                        Array value = DeserializeByteArray(din);
                         array2.SetValue(value, (int)num3);
                     }
                 }
                 else
                 {
-                    bool flag3 = b == 99;
-                    if (flag3)
+                    if (b == 68)
                     {
-                        byte b2 = (byte)din.ReadByte();
-                        CustomType customType;
-                        bool flag4 = Protocol.CodeDict.TryGetValue(b2, out customType);
-                        if (!flag4)
-                        {
-                            throw new Exception("Cannot find deserializer for custom type: " + b2);
-                        }
-                        array2 = Array.CreateInstance(customType.Type, (int)num);
-                        for (int i = 0; i < (int)num; i++)
-                        {
-                            short num4 = this.DeserializeShort(din);
-                            bool flag5 = customType.DeserializeStreamFunction == null;
-                            if (flag5)
-                            {
-                                byte[] array3 = new byte[(int)num4];
-                                din.Read(array3, 0, (int)num4);
-                                array2.SetValue(customType.DeserializeFunction(array3), i);
-                            }
-                            else
-                            {
-                                array2.SetValue(customType.DeserializeStreamFunction(din, num4), i);
-                            }
-                        }
+                        DeserializeDictionaryArray(din, num, out Array result);
+                        return result;
                     }
-                    else
+                    array2 = CreateArrayByType(b, num);
+                    for (short num5 = 0; num5 < num; num5 += 1)
                     {
-                        bool flag6 = b == 68;
-                        if (flag6)
-                        {
-                            Array result = null;
-                            this.DeserializeDictionaryArray(din, num, out result);
-                            return result;
-                        }
-                        array2 = this.CreateArrayByType(b, num);
-                        for (short num5 = 0; num5 < num; num5 += 1)
-                        {
-                            array2.SetValue(this.Deserialize(din, b), (int)num5);
-                        }
+                        array2.SetValue(Deserialize(din, b), (int)num5);
                     }
                 }
             }
+
             return array2;
         }
 
         private byte[] DeserializeByteArray(StreamBuffer din)
         {
-            int num = this.DeserializeInteger(din);
+            int num = DeserializeInteger(din);
             byte[] array = new byte[num];
             din.Read(array, 0, num);
             return array;
@@ -488,34 +454,34 @@ namespace Photon
 
         private int[] DeserializeIntArray(StreamBuffer din)
         {
-            int num = this.DeserializeInteger(din);
+            int num = DeserializeInteger(din);
             int[] array = new int[num];
             for (int i = 0; i < num; i++)
             {
-                array[i] = this.DeserializeInteger(din);
+                array[i] = DeserializeInteger(din);
             }
             return array;
         }
 
         private string[] DeserializeStringArray(StreamBuffer din)
         {
-            int num = (int)this.DeserializeShort(din);
+            int num = (int)DeserializeShort(din);
             string[] array = new string[num];
             for (int i = 0; i < num; i++)
             {
-                array[i] = this.DeserializeString(din);
+                array[i] = DeserializeString(din);
             }
             return array;
         }
 
         private object[] DeserializeObjectArray(StreamBuffer din)
         {
-            short num = this.DeserializeShort(din);
+            short num = DeserializeShort(din);
             object[] array = new object[(int)num];
             for (int i = 0; i < (int)num; i++)
             {
                 byte type = (byte)din.ReadByte();
-                array[i] = this.Deserialize(din, type);
+                array[i] = Deserialize(din, type);
             }
             return array;
         }
@@ -524,11 +490,11 @@ namespace Photon
         {
             byte b = (byte)din.ReadByte();
             byte b2 = (byte)din.ReadByte();
-            int num = (int)this.DeserializeShort(din);
+            int num = (int)DeserializeShort(din);
             bool flag = b == 0 || b == 42;
             bool flag2 = b2 == 0 || b2 == 42;
-            Type typeOfCode = this.GetTypeOfCode(b);
-            Type typeOfCode2 = this.GetTypeOfCode(b2);
+            Type typeOfCode = GetTypeOfCode(b);
+            Type typeOfCode2 = GetTypeOfCode(b2);
             Type type = typeof(Dictionary<,>).MakeGenericType(new Type[]
             {
                 typeOfCode,
@@ -537,8 +503,8 @@ namespace Photon
             IDictionary dictionary = Activator.CreateInstance(type) as IDictionary;
             for (int i = 0; i < num; i++)
             {
-                object key = this.Deserialize(din, flag ? ((byte)din.ReadByte()) : b);
-                object value = this.Deserialize(din, flag2 ? ((byte)din.ReadByte()) : b2);
+                object key = Deserialize(din, flag ? ((byte)din.ReadByte()) : b);
+                object value = Deserialize(din, flag2 ? ((byte)din.ReadByte()) : b2);
                 dictionary.Add(key, value);
             }
             return dictionary;
@@ -546,9 +512,7 @@ namespace Photon
 
         private bool DeserializeDictionaryArray(StreamBuffer din, short size, out Array arrayResult)
         {
-            byte b;
-            byte b2;
-            Type type = this.DeserializeDictionaryType(din, out b, out b2);
+            Type type = DeserializeDictionaryType(din, out byte b, out byte b2);
             arrayResult = Array.CreateInstance(type, (int)size);
             for (short num = 0; num < size; num += 1)
             {
@@ -558,30 +522,30 @@ namespace Photon
                 {
                     return false;
                 }
-                short num2 = this.DeserializeShort(din);
+                short num2 = DeserializeShort(din);
                 for (int i = 0; i < (int)num2; i++)
                 {
                     bool flag2 = b > 0;
                     object key;
                     if (flag2)
                     {
-                        key = this.Deserialize(din, b);
+                        key = Deserialize(din, b);
                     }
                     else
                     {
                         byte type2 = (byte)din.ReadByte();
-                        key = this.Deserialize(din, type2);
+                        key = Deserialize(din, type2);
                     }
                     bool flag3 = b2 > 0;
                     object value;
                     if (flag3)
                     {
-                        value = this.Deserialize(din, b2);
+                        value = Deserialize(din, b2);
                     }
                     else
                     {
                         byte type3 = (byte)din.ReadByte();
-                        value = this.Deserialize(din, type3);
+                        value = Deserialize(din, type3);
                     }
                     dictionary.Add(key, value);
                 }
@@ -604,7 +568,7 @@ namespace Photon
             }
             else
             {
-                type = this.GetTypeOfCode(keyTypeCode);
+                type = GetTypeOfCode(keyTypeCode);
             }
             bool flag2 = gpType2 == GpType.Unknown;
             Type type2;
@@ -614,7 +578,7 @@ namespace Photon
             }
             else
             {
-                type2 = this.GetTypeOfCode(valTypeCode);
+                type2 = GetTypeOfCode(valTypeCode);
             }
             return typeof(Dictionary<,>).MakeGenericType(new Type[]
             {
