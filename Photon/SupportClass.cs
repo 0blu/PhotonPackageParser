@@ -2,6 +2,7 @@
 {
     public class SupportClass
     {
+        #region methods
         public static uint CalculateCrc(byte[] buffer, int length)
         {
             uint maxValue = uint.MaxValue;
@@ -26,5 +27,6 @@
 
             return maxValue;
         }
+        #endregion
     }
 }
