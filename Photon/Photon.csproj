@@ -41,7 +41,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DictionaryEntryEnumerator.cs" />
     <Compile Include="EventData.cs" />
     <Compile Include="GpType.cs" />
     <Compile Include="OperationRequest.cs" />
