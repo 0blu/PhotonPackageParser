@@ -4,21 +4,17 @@ namespace Photon
 {
     public class EventData
     {
-        public byte Code;
-        public Dictionary<byte, object> Parameters;
-
-        public object this[byte key]
+        #region ctors
+        public EventData(byte code, Dictionary<byte, object> parameters)
         {
-            get
-            {
-                Parameters.TryGetValue(key, out object result);
-
-                return result;
-            }
-            set
-            {
-                Parameters[key] = value;
-            }
+            Code = code;
+            Parameters = parameters;
         }
+        #endregion
+
+        #region properties
+        public byte Code { get; }
+        public Dictionary<byte, object> Parameters { get; }
+        #endregion
     }
 }

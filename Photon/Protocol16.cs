@@ -161,31 +161,28 @@ namespace Photon
 
         public OperationRequest DeserializeOperationRequest(StreamBuffer din)
         {
-            return new OperationRequest
-            {
-                OperationCode = DeserializeByte(din),
-                Parameters = DeserializeParameterTable(din)
-            };
+            byte operationCode = DeserializeByte(din);
+            Dictionary<byte, object> parameters = DeserializeParameterTable(din);
+
+            return new OperationRequest(operationCode, parameters);
         }
 
         public OperationResponse DeserializeOperationResponse(StreamBuffer stream)
         {
-            return new OperationResponse
-            {
-                OperationCode = DeserializeByte(stream),
-                ReturnCode = DeserializeShort(stream),
-                DebugMessage = (Deserialize(stream, DeserializeByte(stream)) as string),
-                Parameters = DeserializeParameterTable(stream)
-            };
+            byte operationCode = DeserializeByte(stream);
+            short returnCode = DeserializeShort(stream);
+            string debugMessage = (Deserialize(stream, DeserializeByte(stream)) as string);
+            Dictionary<byte, object> parameters = DeserializeParameterTable(stream);
+
+            return new OperationResponse(operationCode, returnCode, debugMessage, parameters);
         }
 
         public EventData DeserializeEventData(StreamBuffer din)
         {
-            return new EventData
-            {
-                Code = DeserializeByte(din),
-                Parameters = DeserializeParameterTable(din)
-            };
+            byte code = DeserializeByte(din);
+            Dictionary<byte, object> parameters = DeserializeParameterTable(din);
+
+            return new EventData(code, parameters);
         }
 
         private Dictionary<byte, object> DeserializeParameterTable(StreamBuffer stream)

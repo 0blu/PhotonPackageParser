@@ -4,7 +4,17 @@ namespace Photon
 {
     public class OperationRequest
     {
-        public byte OperationCode;
-        public Dictionary<byte, object> Parameters;
+        #region ctors
+        internal OperationRequest(byte operationCode, Dictionary<byte, object> parameters)
+        {
+            OperationCode = operationCode;
+            Parameters = parameters;
+        }
+        #endregion
+
+        #region properties
+        public byte OperationCode { get; }
+        public Dictionary<byte, object> Parameters { get; }
+        #endregion
     }
 }

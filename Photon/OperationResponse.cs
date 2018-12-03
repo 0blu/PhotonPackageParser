@@ -4,22 +4,21 @@ namespace Photon
 {
     public class OperationResponse
     {
-        public byte OperationCode;
-        public short ReturnCode;
-        public string DebugMessage;
-        public Dictionary<byte, object> Parameters;
-
-        public object this[byte parameterCode]
+        #region ctors
+        public OperationResponse(byte operationCode, short returnCode, string debugMessage, Dictionary<byte, object> parameters)
         {
-            get
-            {
-                Parameters.TryGetValue(parameterCode, out object result);
-                return result;
-            }
-            set
-            {
-                Parameters[parameterCode] = value;
-            }
+            OperationCode = operationCode;
+            ReturnCode = returnCode;
+            DebugMessage = debugMessage;
+            Parameters = parameters;
         }
+        #endregion
+
+        #region properties
+        public byte OperationCode { get; }
+        public short ReturnCode { get; }
+        public string DebugMessage { get; }
+        public Dictionary<byte, object> Parameters { get; }
+        #endregion
     }
 }
