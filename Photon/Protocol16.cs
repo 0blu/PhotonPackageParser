@@ -71,7 +71,7 @@ namespace Photon
                         return typeof(object[]);
                 }
             }
-            //Debug.WriteLine("missing type: " + typeCode);
+
             throw new Exception("deserialize(): " + typeCode);
         }
 

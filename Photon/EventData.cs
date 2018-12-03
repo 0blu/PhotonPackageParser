@@ -20,15 +20,5 @@ namespace Photon
                 Parameters[key] = value;
             }
         }
-
-        //public override string ToString()
-        //{
-        //    return string.Format("Event {0}.", this.Code.ToString());
-        //}
-
-        //public string ToStringFull()
-        //{
-        //    return string.Format("Event {0}: {1}", Code, SupportClass.DictionaryToString(Parameters));
-        //}
     }
 }

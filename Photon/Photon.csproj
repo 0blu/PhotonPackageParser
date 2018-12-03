@@ -41,20 +41,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CustomType.cs" />
-    <Compile Include="DeserializeMethod.cs" />
-    <Compile Include="DeserializeStreamMethod.cs" />
     <Compile Include="DictionaryEntryEnumerator.cs" />
     <Compile Include="EventData.cs" />
     <Compile Include="GpType.cs" />
-    <Compile Include="Hashtable.cs" />
     <Compile Include="OperationRequest.cs" />
     <Compile Include="OperationResponse.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Protocol.cs" />
     <Compile Include="Protocol16.cs" />
-    <Compile Include="SerializeMethod.cs" />
-    <Compile Include="SerializeStreamMethod.cs" />
     <Compile Include="StreamBuffer.cs" />
     <Compile Include="SupportClass.cs" />
   </ItemGroup>

@@ -1,13 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace Photon
 {
     public class Protocol
     {
-        internal static readonly Dictionary<Type, CustomType> TypeDict = new Dictionary<Type, CustomType>();
-        internal static readonly Dictionary<byte, CustomType> CodeDict = new Dictionary<byte, CustomType>();
-
         private static readonly float[] memFloatBlock = new float[1];
         private static readonly byte[] memDeserialize = new byte[4];
 
