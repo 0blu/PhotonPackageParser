@@ -280,7 +280,7 @@ namespace Protocol16
             int dictionarySize = DeserializeShort(stream);
             Type keyType = GetTypeOfCode(keyTypeCode);
             Type valueType = GetTypeOfCode(valueTypeCode);
-            Type dictionaryType = typeof(IDictionary<,>).MakeGenericType(new Type[]
+            Type dictionaryType = typeof(Dictionary<,>).MakeGenericType(new Type[]
             {
                 keyType,
                 valueType
