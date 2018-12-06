@@ -1,14 +1,10 @@
 ﻿using System;
 using System.IO;
 
-namespace Photon
+namespace Protocol16
 {
-    public class StreamBuffer : Stream
+    public class Protocol16Stream : Stream
     {
-        #region constants
-        private const int DefaultInitialSize = 0;
-        #endregion
-
         #region fields
         private int position;
         private int length;
@@ -16,12 +12,12 @@ namespace Photon
         #endregion
 
         #region ctors
-        public StreamBuffer(int size = 0)
+        public Protocol16Stream(int size = 0)
         {
             buffer = new byte[size];
         }
 
-        public StreamBuffer(byte[] buffer)
+        public Protocol16Stream(byte[] buffer)
         {
             this.buffer = buffer;
             length = buffer.Length;
@@ -57,7 +53,7 @@ namespace Photon
         {
             get
             {
-                return (long)length;
+                return length;
             }
         }
 
@@ -79,13 +75,56 @@ namespace Photon
         }
         #endregion
 
+        #region methods
         public override void Flush() { }
 
-        public override long Seek(long offset, SeekOrigin origin)
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            int result;
+
+            int num = length - position;
+            if (num <= 0)
+            {
+                result = 0;
+            }
+            else
+            {
+                if (count > num)
+                {
+                    count = num;
+                }
+                Buffer.BlockCopy(this.buffer, position, buffer, offset, count);
+                position += count;
+                result = count;
+            }
+
+            return result;
+        }
+
+        public override int ReadByte()
+        {
+            int result;
+
+            if (position >= length)
+            {
+                result = -1;
+            }
+            else
+            {
+                byte[] array = buffer;
+                int num = position;
+                position = num + 1;
+                result = array[num];
+            }
+
+            return result;
+        }
+
+        public override long Seek(long offset, SeekOrigin seekOrigin)
         {
             int num;
 
-            switch (origin)
+            switch (seekOrigin)
             {
                 case SeekOrigin.Begin:
                     num = (int)offset;
@@ -122,30 +161,7 @@ namespace Photon
             }
         }
 
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-            int result;
-
-            int num = length - position;
-            if (num <= 0)
-            {
-                result = 0;
-            }
-            else
-            {
-                if (count > num)
-                {
-                    count = num;
-                }
-                Buffer.BlockCopy(this.buffer, position, buffer, offset, count);
-                position += count;
-                result = count;
-            }
-
-            return result;
-        }
-
-        public override void Write(byte[] buffer, int srcOffset, int count)
+        public override void Write(byte[] buffer, int offset, int count)
         {
             int num = position + count;
             CheckSize(num);
@@ -153,42 +169,13 @@ namespace Photon
             {
                 length = num;
             }
-            Buffer.BlockCopy(buffer, srcOffset, this.buffer, position, count);
+            Buffer.BlockCopy(buffer, offset, this.buffer, position, count);
             position = num;
         }
+        #endregion
 
-        public override int ReadByte()
-        {
-            int result;
-
-            if (position >= length)
-            {
-                result = -1;
-            }
-            else
-            {
-                byte[] array = buffer;
-                int num = position;
-                position = num + 1;
-                result = array[num];
-            }
-
-            return result;
-        }
-
-        public override void WriteByte(byte value)
-        {
-            if (position >= length)
-            {
-                length = position++;
-                CheckSize(length);
-            }
-            byte[] array = buffer;
-            position += 1;
-            array[position] = value;
-        }
-
-        private bool CheckSize(int size)
+        #region private methods
+        private bool CheckSize(long size)
         {
             bool result;
 
@@ -215,5 +202,6 @@ namespace Photon
 
             return result;
         }
+        #endregion
     }
 }
