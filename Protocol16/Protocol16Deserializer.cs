@@ -207,7 +207,6 @@ namespace Protocol16
 
         private static string DeserializeString(Protocol16Stream stream)
         {
-#warning DeserializeInteger???
             int stringSize = DeserializeShort(stream);
             if (stringSize == 0)
             {
@@ -245,7 +244,6 @@ namespace Protocol16
 
         private static string[] DeserializeStringArray(Protocol16Stream stream)
         {
-#warning DeserializeInteger???
             int arraySize = DeserializeShort(stream);
 
             var array = new string[arraySize];

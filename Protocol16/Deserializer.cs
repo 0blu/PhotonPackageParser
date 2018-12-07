@@ -6,7 +6,7 @@
         {
             int num = offset;
             offset = num + 1;
-            byte b = (byte)(source[num] << 8);
+            short b = (short)(source[num] << 8);
             num = offset;
             offset = num + 1;
             value = (short)(b | source[num]);
