@@ -11,6 +11,7 @@
             int value3 = value2 | source[offset] << 8;
             offset++;
             value = (value3 | source[offset]);
+            offset++;
         }
 
         public static void Deserialize(out short value, byte[] source, ref int offset)

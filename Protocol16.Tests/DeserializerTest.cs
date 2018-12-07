@@ -17,6 +17,7 @@ namespace Protocol16.Tests
             Deserializer.Deserialize(out short result, buffer, ref offset);
 
             Assert.AreEqual(result, short.MaxValue);
+            Assert.AreEqual(offset, 2);
         }
 
         [Test]
@@ -31,6 +32,7 @@ namespace Protocol16.Tests
             Deserializer.Deserialize(out int result, buffer, ref offset);
 
             Assert.AreEqual(result, int.MaxValue);
+            Assert.AreEqual(offset, 4);
         }
     }
 }
