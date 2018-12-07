@@ -6,16 +6,6 @@ namespace Protocol16.Tests
     [TestFixture]
     public class Protocol16DeserializerTest
     {
-        //[Test]
-        //public void ExampleTest()
-        //{
-        //    Init
-
-        //    Code
-
-        //     Assert
-        //}
-
         [Test]
         public void DeserializeDicitonary()
         {
@@ -51,55 +41,179 @@ namespace Protocol16.Tests
         }
 
         //[Test]
-        //public void Deserialize()
+        //public void DeserializeByte()
+        //{
+        //    var buffer = new byte[]
+        //    {
+
+        //    };
+
+        //    var stream = new Protocol16Stream(buffer);
+        //    byte typeCode = (byte)stream.ReadByte();
+        //    string[] result = Protocol16Deserializer.Deserialize(stream, typeCode) as string[];
+        //}
+
+        [Test]
+        public void DeserializeDouble()
+        {
+            var buffer = new byte[]
+            {
+
+            };
+
+            var stream = new Protocol16Stream(buffer);
+            byte typeCode = (byte)stream.ReadByte();
+            double? result = Protocol16Deserializer.Deserialize(stream, typeCode) as double?;
+
+            Assert.NotNull(result);
+            Assert.True(result == 1234.55);
+        }
+
+        //[Test]
+        //public void DeserializeEventData()
+        //{
+
+        //}
+
+        [Test]
+        public void DeserializeFloat()
+        {
+            var buffer = new byte[]
+            {
+
+            };
+
+            var stream = new Protocol16Stream(buffer);
+            byte typeCode = (byte)stream.ReadByte();
+            float? result = Protocol16Deserializer.Deserialize(stream, typeCode) as float?;
+
+            Assert.NotNull(result);
+            Assert.True(result == 1234.55);
+        }
+
+        [Test]
+        public void DeserializeInteger()
+        {
+            var buffer = new byte[]
+            {
+
+            };
+
+            var stream = new Protocol16Stream(buffer);
+            byte typeCode = (byte)stream.ReadByte();
+            int? result = Protocol16Deserializer.Deserialize(stream, typeCode) as int?;
+
+            Assert.NotNull(result);
+            Assert.True(result == 1234);
+        }
+
+        [Test]
+        public void DeserializeShort()
+        {
+            var buffer = new byte[]
+            {
+
+            };
+
+            var stream = new Protocol16Stream(buffer);
+            byte typeCode = (byte)stream.ReadByte();
+            short? result = Protocol16Deserializer.Deserialize(stream, typeCode) as short?;
+
+            Assert.NotNull(result);
+            Assert.True(result == 1234);
+        }
+
+        [Test]
+        public void DeserializeLong()
+        {
+            var buffer = new byte[]
+            {
+
+            };
+
+            var stream = new Protocol16Stream(buffer);
+            byte typeCode = (byte)stream.ReadByte();
+            long? result = Protocol16Deserializer.Deserialize(stream, typeCode) as long?;
+
+            Assert.NotNull(result);
+            Assert.True(result == 1234);
+        }
+
+        [Test]
+        public void DeserializeIntegerArray()
+        {
+            var buffer = new byte[]
+            {
+
+            };
+
+            var stream = new Protocol16Stream(buffer);
+            byte typeCode = (byte)stream.ReadByte();
+            int[] result = Protocol16Deserializer.Deserialize(stream, typeCode) as int[];
+
+            Assert.NotNull(result);
+            Assert.True(result[0] == 0);
+            Assert.True(result[1] == 1);
+        }
+
+        [Test]
+        public void DeserializeBoolean()
+        {
+            var buffer = new byte[]
+            {
+
+            };
+
+            var stream = new Protocol16Stream(buffer);
+            byte typeCode = (byte)stream.ReadByte();
+            bool? result = Protocol16Deserializer.Deserialize(stream, typeCode) as bool?;
+
+            Assert.NotNull(result);
+            Assert.True(result);
+        }
+
+        //[Test]
+        //public void DeserializeOperationResponse()
         //{
 
         //}
 
         //[Test]
-        //public void Deserialize()
+        //public void DeserializeOperationRequest()
+        //{
+
+        //}
+
+        [Test]
+        public void DeserializeString()
+        {
+            var buffer = new byte[]
+            {
+
+            };
+
+            var stream = new Protocol16Stream(buffer);
+            byte typeCode = (byte)stream.ReadByte();
+            string result = Protocol16Deserializer.Deserialize(stream, typeCode) as string;
+
+            Assert.NotNull(result);
+            Assert.True(result.Equals("test_message"));
+        }
+
+        //[Test]
+        //public void DeserializeByteArray()
         //{
 
         //}
 
         //[Test]
-        //public void Deserialize()
+        //public void DeserializeArray()
         //{
 
         //}
 
         //[Test]
-        //public void Deserialize()
-        //{
-
-        //}
-
-        //[Test]
-        //public void Deserialize()
-        //{
-
-        //}
-
-        //[Test]
-        //public void Deserialize()
-        //{
-
-        //}
-
-        //[Test]
-        //public void Deserialize()
-        //{
-
-        //}
-
-        //[Test]
-        //public void Deserialize()
-        //{
-
-        //}
-
-        //[Test]
-        //public void Deserialize()
+        //public void DeserializeObjectArray()
         //{
 
         //}

@@ -60,8 +60,6 @@ namespace Protocol16
                 default:
                     throw new ArgumentException($"Type code: {typeCode} not implemented.");
             }
-
-
         }
 
         public static OperationRequest DeserializeOperationRequest(Protocol16Stream stream)
