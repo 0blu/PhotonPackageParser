@@ -80,73 +80,61 @@ namespace Protocol16
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            int result;
-
-            int num = length - position;
-            if (num <= 0)
+            int dif = length - position;
+            if (dif <= 0)
             {
-                result = 0;
+                return 0;
             }
-            else
+            if (count > dif)
             {
-                if (count > num)
-                {
-                    count = num;
-                }
-                Buffer.BlockCopy(this.buffer, position, buffer, offset, count);
-                position += count;
-                result = count;
+                count = dif;
             }
+            Buffer.BlockCopy(this.buffer, position, buffer, offset, count);
+            position += count;
 
-            return result;
+            return count;
         }
 
         public override int ReadByte()
         {
-            int result;
-
             if (position >= length)
             {
-                result = -1;
+                return -1;
             }
-            else
-            {
-                byte[] array = buffer;
-                int num = position;
-                position = num + 1;
-                result = array[num];
-            }
+            byte[] array = buffer;
+            int result = array[position];
+            position++;
 
             return result;
         }
 
-        public override long Seek(long offset, SeekOrigin seekOrigin)
+        public override long Seek(long offset, SeekOrigin origin)
         {
-            int num;
+            int newLength;
 
-            switch (seekOrigin)
+            switch (origin)
             {
                 case SeekOrigin.Begin:
-                    num = (int)offset;
+                    newLength = (int)offset;
                     break;
                 case SeekOrigin.Current:
-                    num = position + (int)offset;
+                    newLength = position + (int)offset;
                     break;
                 case SeekOrigin.End:
-                    num = length + (int)offset;
+                    newLength = length + (int)offset;
                     break;
                 default:
                     throw new ArgumentException("Invalid seek origin");
             }
-            if (num < 0)
+            if (newLength < 0)
             {
                 throw new ArgumentException("Seek before begin");
             }
-            if (num > length)
+            if (newLength > length)
             {
                 throw new ArgumentException("Seek after end");
             }
-            position = num;
+            position = newLength;
 
             return (long)position;
         }
@@ -163,44 +151,38 @@ namespace Protocol16
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            int num = position + count;
-            CheckSize(num);
-            if (num > length)
+            int sum = position + count;
+            CheckSize(sum);
+            if (sum > length)
             {
-                length = num;
+                length = sum;
             }
             Buffer.BlockCopy(buffer, offset, this.buffer, position, count);
-            position = num;
+            position = sum;
         }
         #endregion
 
         #region private methods
         private bool CheckSize(long size)
         {
-            bool result;
-
             if (size <= buffer.Length)
             {
-                result = false;
+                return false;
             }
-            else
+            int length = buffer.Length;
+            if (length == 0)
             {
-                int num = buffer.Length;
-                if (num == 0)
-                {
-                    num = 1;
-                }
-                while (size > num)
-                {
-                    num *= 2;
-                }
-                byte[] dst = new byte[num];
-                Buffer.BlockCopy(buffer, 0, dst, 0, buffer.Length);
-                buffer = dst;
-                result = true;
+                length = 1;
             }
+            while (size > length)
+            {
+                length *= 2;
+            }
+            byte[] dst = new byte[length];
+            Buffer.BlockCopy(buffer, 0, dst, 0, buffer.Length);
+            buffer = dst;
 
-            return result;
+            return true;
         }
         #endregion
     }
