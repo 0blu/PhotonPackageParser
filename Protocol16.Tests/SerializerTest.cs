@@ -18,6 +18,7 @@ namespace Protocol16.Tests
             Serializer.Serialize(1234, buffer, ref offset);
 
             Assert.AreEqual(buffer, resultBuffer);
+            Assert.AreEqual(offset, 4);
         }
     }
 }
