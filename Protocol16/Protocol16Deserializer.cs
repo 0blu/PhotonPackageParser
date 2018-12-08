@@ -152,7 +152,7 @@ namespace Protocol16
 
             stream.Read(buffer, 0, shortSize);
 
-            return (short)((int)buffer[0] << 8 | (int)buffer[1]);
+            return (short)(buffer[0] << 8 | buffer[1]);
         }
 
         private static int DeserializeInteger(Protocol16Stream stream)
@@ -161,7 +161,7 @@ namespace Protocol16
 
             stream.Read(buffer, 0, integerSize);
 
-            return (int)buffer[0] << 24 | (int)buffer[1] << 16 | (int)buffer[2] << 8 | (int)buffer[3];
+            return buffer[0] << 24 | buffer[1] << 16 | buffer[2] << 8 | buffer[3];
         }
 
         private static long DeserializeLong(Protocol16Stream stream)
@@ -171,7 +171,7 @@ namespace Protocol16
             stream.Read(buffer, 0, longSize);
             if (BitConverter.IsLittleEndian)
             {
-                return (long)((long)buffer[0] << 56 | (long)buffer[1] << 48 | (long)buffer[2] << 40 | (long)buffer[3] << 32 | (long)buffer[4] << 24 | (long)buffer[5] << 16 | (long)buffer[6] << 8 | (long)buffer[7]);
+                return (long)buffer[0] << 56 | (long)buffer[1] << 48 | (long)buffer[2] << 40 | (long)buffer[3] << 32 | (long)buffer[4] << 24 | (long)buffer[5] << 16 | (long)buffer[6] << 8 | buffer[7];
             }
             else
             {
@@ -293,48 +293,98 @@ namespace Protocol16
             return dictionary;
         }
 
-        private static bool DeserializeDictionaryArray(Protocol16Stream stream, short size, out Array array)
+        private static bool DeserializeDictionaryArray(Protocol16Stream din, short size, out Array result)
         {
-            Type type = DeserializeDictionaryType(stream, out byte keyTypeCode, out byte valueTypeCode);
-            array = Array.CreateInstance(type, size);
-            for (int i = 0; i < size; i++)
+            Type type = DeserializeDictionaryType(din, out byte keyTypeCode, out byte valueTypeCode);
+            result = Array.CreateInstance(type, size);
+
+            for (short i = 0; i < size; i += 1)
             {
                 if (!(Activator.CreateInstance(type) is IDictionary dictionary))
                 {
                     return false;
                 }
-
-                //int dictionarySize = DeserializeShort(stream);
-                //for (int j = 0; j < dictionarySize; j++)
-                //{
-                //    object key;
-                //    if (keyTypeCode > 0)
-                //    {
-                //        key = Deserialize(stream, keyTypeCode);
-                //    }
-                //    else
-                //    {
-                //        byte nextKeyTypeCode = (byte)stream.ReadByte();
-                //        key = Deserialize(stream, nextKeyTypeCode);
-                //    }
-
-                //    object value;
-                //    if (valueTypeCode > 0)
-                //    {
-                //        value = Deserialize(stream, valueTypeCode);
-                //    }
-                //    else
-                //    {
-                //        byte nextValueTypeCode = (byte)stream.ReadByte();
-                //        value = Deserialize(stream, nextValueTypeCode);
-                //    }
-
-                //    dictionary.Add(key, value);
-                //}
-                array.SetValue(DeserializeDictionary(stream), i);
+                short arraySize = DeserializeShort(din);
+                for (int j = 0; j < arraySize; j++)
+                {
+                    object key;
+                    if (keyTypeCode > 0)
+                    {
+                        key = Deserialize(din, keyTypeCode);
+                    }
+                    else
+                    {
+                        byte nextKeyTypeCode = (byte)din.ReadByte();
+                        key = Deserialize(din, nextKeyTypeCode);
+                    }
+                    object value;
+                    if (valueTypeCode > 0)
+                    {
+                        value = Deserialize(din, valueTypeCode);
+                    }
+                    else
+                    {
+                        byte nextValueTypeCode = (byte)din.ReadByte();
+                        value = Deserialize(din, nextValueTypeCode);
+                    }
+                    dictionary.Add(key, value);
+                }
+                result.SetValue(dictionary, i);
             }
 
             return true;
+        }
+
+        private static Array DeserializeArray(Protocol16Stream din)
+        {
+            short size = DeserializeShort(din);
+            byte typeCode = (byte)din.ReadByte();
+            switch ((Protocol16Type)typeCode)
+            {
+                case Protocol16Type.Array:
+                    {
+                        Array array = DeserializeArray(din);
+                        Type arrayType = array.GetType();
+                        Array result = Array.CreateInstance(arrayType, size);
+                        result.SetValue(array, 0);
+                        for (short i = 1; i < size; i += 1)
+                        {
+                            array = DeserializeArray(din);
+                            result.SetValue(array, i);
+                        }
+
+                        return result;
+                    }
+                case Protocol16Type.ByteArray:
+                    {
+                        Array result = Array.CreateInstance(typeof(byte[]), size);
+                        for (short i = 0; i < size; i += 1)
+                        {
+                            Array value = DeserializeByteArray(din);
+                            result.SetValue(value, i);
+                        }
+
+                        return result;
+                    }
+                case Protocol16Type.Dictionary:
+                    {
+                        DeserializeDictionaryArray(din, size, out Array result);
+
+                        return result;
+                    }
+                default:
+                    {
+                        Type arrayType = GetTypeOfCode(typeCode);
+                        Array result = Array.CreateInstance(arrayType, size);
+
+                        for (short i = 0; i < size; i += 1)
+                        {
+                            result.SetValue(Deserialize(din, typeCode), i);
+                        }
+
+                        return result;
+                    }
+            }
         }
 
         private static Type DeserializeDictionaryType(Protocol16Stream stream, out byte keyTypeCode, out byte valueTypeCode)
@@ -344,67 +394,11 @@ namespace Protocol16
             Type keyType = GetTypeOfCode(keyTypeCode);
             Type valueType = GetTypeOfCode(valueTypeCode);
 
-            return typeof(IDictionary<,>).MakeGenericType(new Type[]
+            return typeof(Dictionary<,>).MakeGenericType(new Type[]
             {
                 keyType,
                 valueType
             });
-        }
-
-        private static Array DeserializeArray(Protocol16Stream stream)
-        {
-            int arraySize = DeserializeShort(stream);
-            byte typeCode = (byte)stream.ReadByte();
-
-            switch ((Protocol16Type)typeCode)
-            {
-                case Protocol16Type.Array:
-                    {
-                        Array array = DeserializeArray(stream);
-                        Type typeArray = array.GetType();
-                        Array result = Array.CreateInstance(typeArray, arraySize);
-                        result.SetValue(array, 0);
-                        for (int i = 0; i < arraySize; i++)
-                        {
-                            array = DeserializeArray(stream);
-                            result.SetValue(array, 0);
-                        }
-
-                        return result;
-                    }
-                case Protocol16Type.ByteArray:
-                    {
-                        Array result = Array.CreateInstance(typeof(byte[]), arraySize);
-                        for (int i = 0; i < arraySize; i++)
-                        {
-                            Array array = DeserializeByteArray(stream);
-                            result.SetValue(array, i);
-                        }
-
-                        return result;
-                    }
-                case Protocol16Type.Dictionary:
-                    {
-                        DeserializeDictionaryArray(stream, (short)arraySize, out Array result);
-
-                        return result;
-                    }
-                default:
-                    {
-                        Array result = CreateArrayByType(typeCode, (short)arraySize);
-                        for (int i = 0; i < arraySize; i++)
-                        {
-                            result.SetValue(Deserialize(stream, typeCode), i);
-                        }
-
-                        return result;
-                    }
-            }
-        }
-
-        private static Array CreateArrayByType(byte typeCode, short length)
-        {
-            return Array.CreateInstance(GetTypeOfCode(typeCode), length);
         }
 
         private static Dictionary<byte, object> DeserializeParameterTable(Protocol16Stream stream)

@@ -8,18 +8,17 @@ namespace Protocol16
         #region fields
         private int position;
         private int length;
-        private byte[] buffer;
         #endregion
 
         #region ctors
         public Protocol16Stream(int size = 0)
         {
-            buffer = new byte[size];
+            GetBuffer = new byte[size];
         }
 
         public Protocol16Stream(byte[] buffer)
         {
-            this.buffer = buffer;
+            GetBuffer = buffer;
             length = buffer.Length;
         }
         #endregion
@@ -61,7 +60,7 @@ namespace Protocol16
         {
             get
             {
-                return (long)position;
+                return position;
             }
             set
             {
@@ -73,6 +72,8 @@ namespace Protocol16
                 }
             }
         }
+
+        public byte[] GetBuffer { get; private set; }
         #endregion
 
         #region methods
@@ -89,7 +90,7 @@ namespace Protocol16
             {
                 count = dif;
             }
-            Buffer.BlockCopy(this.buffer, position, buffer, offset, count);
+            Buffer.BlockCopy(GetBuffer, position, buffer, offset, count);
             position += count;
 
             return count;
@@ -101,7 +102,7 @@ namespace Protocol16
             {
                 return -1;
             }
-            byte[] array = buffer;
+            byte[] array = GetBuffer;
             int result = array[position];
             position++;
 
@@ -136,7 +137,7 @@ namespace Protocol16
             }
             position = newLength;
 
-            return (long)position;
+            return position;
         }
 
         public override void SetLength(long value)
@@ -157,7 +158,7 @@ namespace Protocol16
             {
                 length = sum;
             }
-            Buffer.BlockCopy(buffer, offset, this.buffer, position, count);
+            Buffer.BlockCopy(buffer, offset, GetBuffer, position, count);
             position = sum;
         }
         #endregion
@@ -165,11 +166,11 @@ namespace Protocol16
         #region private methods
         private bool CheckSize(long size)
         {
-            if (size <= buffer.Length)
+            if (size <= GetBuffer.Length)
             {
                 return false;
             }
-            int length = buffer.Length;
+            int length = GetBuffer.Length;
             if (length == 0)
             {
                 length = 1;
@@ -179,8 +180,8 @@ namespace Protocol16
                 length *= 2;
             }
             byte[] dst = new byte[length];
-            Buffer.BlockCopy(buffer, 0, dst, 0, buffer.Length);
-            buffer = dst;
+            Buffer.BlockCopy(GetBuffer, 0, dst, 0, GetBuffer.Length);
+            GetBuffer = dst;
 
             return true;
         }
