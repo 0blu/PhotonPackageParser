@@ -1,7 +1,7 @@
-﻿using System;
+﻿using PcapDotNet.Packets.Transport;
+using Protocol16;
+using System;
 using System.Collections.Generic;
-using ExitGames.Client.Photon;
-using PcapDotNet.Packets.Transport;
 using System.IO;
 using System.Linq;
 
@@ -18,11 +18,9 @@ namespace PhotonPackageParser
             public byte[] TotalPayload;
         }
 
-        private static readonly Protocol16 Protocol16 = new Protocol16();
-
         private const int CommandHeaderLength = 12;
         private const int PhotonHeaderLength = 12;
-        
+
         private readonly Dictionary<int, SegmentedPackage> _pendingSegments = new Dictionary<int, SegmentedPackage>();
 
         public PhotonPackageParser(IPhotonPackageHandler handler)
@@ -37,12 +35,12 @@ namespace PhotonPackageParser
 
             byte[] source = datagram.Payload.ToArray();
             int offset = 0;
-            
-            Protocol.Deserialize(out short peerId, source, ref offset);
+
+            Deserializer.Deserialize(out short peerId, source, ref offset);
             ReadByte(out byte flags, source, ref offset);
             ReadByte(out byte commandCount, source, ref offset);
-            Protocol.Deserialize(out int timestamp, source, ref offset);
-            Protocol.Deserialize(out int challenge, source, ref offset);
+            Deserializer.Deserialize(out int timestamp, source, ref offset);
+            Deserializer.Deserialize(out int challenge, source, ref offset);
 
             bool isEncrypted = flags == 1;
             bool isCrcEnabled = flags == 0xCC;
@@ -55,10 +53,10 @@ namespace PhotonPackageParser
             if (isCrcEnabled)
             {
                 int ignoredOffset = 0;
-                Protocol.Deserialize(out int crc, source, ref ignoredOffset);
-                Protocol.Serialize(0, source, ref offset);
+                Deserializer.Deserialize(out int crc, source, ref ignoredOffset);
+                Serializer.Serialize(0, source, ref offset);
 
-                if (crc != SupportClass.CalculateCrc(source, source.Length))
+                if (crc != CrcCalculator.Calculate(source, source.Length))
                 {
                     return;// Invalid crc
                 }
@@ -76,8 +74,8 @@ namespace PhotonPackageParser
             ReadByte(out byte channelId, source, ref offset);
             ReadByte(out byte commandFlags, source, ref offset);
             offset++;// Skip 1 byte
-            Protocol.Deserialize(out int commandLength, source, ref offset);
-            Protocol.Deserialize(out int sequenceNumber, source, ref offset);
+            Deserializer.Deserialize(out int commandLength, source, ref offset);
+            Deserializer.Deserialize(out int sequenceNumber, source, ref offset);
             commandLength -= CommandHeaderLength;
 
             switch (commandType)
@@ -108,7 +106,7 @@ namespace PhotonPackageParser
             commandLength--;
 
             int operationLength = commandLength;
-            var payload = new StreamBuffer(operationLength);
+            var payload = new Protocol16Stream(operationLength);
             payload.Write(source, offset, operationLength);
             payload.Seek(0L, SeekOrigin.Begin);
 
@@ -116,15 +114,15 @@ namespace PhotonPackageParser
             switch (messageType)
             {
                 case 2:// Operation Request
-                    var requestData = Protocol16.DeserializeOperationRequest(payload);
+                    var requestData = Protocol16Deserializer.DeserializeOperationRequest(payload);
                     _handler.OnRequest(requestData.OperationCode, requestData.Parameters);
                     break;
                 case 3:// Operation Response
-                    var responseData = Protocol16.DeserializeOperationResponse(payload);
+                    var responseData = Protocol16Deserializer.DeserializeOperationResponse(payload);
                     _handler.OnResponse(responseData.OperationCode, responseData.ReturnCode, responseData.Parameters);
                     break;
                 case 4:// Event
-                    var eventData = Protocol16.DeserializeEventData(payload);
+                    var eventData = Protocol16Deserializer.DeserializeEventData(payload);
                     _handler.OnEvent(eventData.Code, eventData.Parameters);
                     break;
             }
@@ -132,15 +130,15 @@ namespace PhotonPackageParser
 
         private void HandleSendFragment(byte[] source, ref int offset, ref int commandLength)
         {
-            Protocol.Deserialize(out int startSequenceNumber, source, ref offset);
+            Deserializer.Deserialize(out int startSequenceNumber, source, ref offset);
             commandLength -= 4;
-            Protocol.Deserialize(out int fragmentCount, source, ref offset);
+            Deserializer.Deserialize(out int fragmentCount, source, ref offset);
             commandLength -= 4;
-            Protocol.Deserialize(out int fragmentNumber, source, ref offset);
+            Deserializer.Deserialize(out int fragmentNumber, source, ref offset);
             commandLength -= 4;
-            Protocol.Deserialize(out int totalLength, source, ref offset);
+            Deserializer.Deserialize(out int totalLength, source, ref offset);
             commandLength -= 4;
-            Protocol.Deserialize(out int fragmentOffset, source, ref offset);
+            Deserializer.Deserialize(out int fragmentOffset, source, ref offset);
             commandLength -= 4;
 
             var fragmentLength = commandLength;

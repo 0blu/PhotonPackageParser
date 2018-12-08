@@ -7,6 +7,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhotonPackageParser", "Phot
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhotonPackageParser.Example", "PhotonPackageParser.Example\PhotonPackageParser.Example.csproj", "{4A73912F-6450-4BB1-85D8-5571AAFB94F6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Protocol16", "Protocol16\Protocol16.csproj", "{591D37A8-2AAE-40AA-B92A-4B52C86090A6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Protocol16.Tests", "Protocol16.Tests\Protocol16.Tests.csproj", "{7FAA9DBC-223B-4177-A497-EAF54B1ACFA8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +25,14 @@ Global
 		{4A73912F-6450-4BB1-85D8-5571AAFB94F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4A73912F-6450-4BB1-85D8-5571AAFB94F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4A73912F-6450-4BB1-85D8-5571AAFB94F6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{591D37A8-2AAE-40AA-B92A-4B52C86090A6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{591D37A8-2AAE-40AA-B92A-4B52C86090A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{591D37A8-2AAE-40AA-B92A-4B52C86090A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{591D37A8-2AAE-40AA-B92A-4B52C86090A6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7FAA9DBC-223B-4177-A497-EAF54B1ACFA8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7FAA9DBC-223B-4177-A497-EAF54B1ACFA8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7FAA9DBC-223B-4177-A497-EAF54B1ACFA8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7FAA9DBC-223B-4177-A497-EAF54B1ACFA8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
