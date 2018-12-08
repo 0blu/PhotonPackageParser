@@ -173,10 +173,8 @@ namespace Protocol16
             {
                 return (long)buffer[0] << 56 | (long)buffer[1] << 48 | (long)buffer[2] << 40 | (long)buffer[3] << 32 | (long)buffer[4] << 24 | (long)buffer[5] << 16 | (long)buffer[6] << 8 | buffer[7];
             }
-            else
-            {
-                return BitConverter.ToInt64(buffer, 0);
-            }
+
+            return BitConverter.ToInt64(buffer, 0);
         }
 
         private static float DeserializeFloat(Protocol16Stream stream)
