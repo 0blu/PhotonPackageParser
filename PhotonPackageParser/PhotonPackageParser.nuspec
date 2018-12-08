@@ -13,4 +13,7 @@
     <copyright>$copyright$</copyright>
     <tags>Photon Unity3d Sniffing</tags>
   </metadata>
+  <files>
+    <file src="bin\Release\Protocol16.dll" target="lib/net471" />
+  </files>
 </package>
