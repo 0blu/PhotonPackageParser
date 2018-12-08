@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Photon
+namespace Protocol16
 {
     public class OperationRequest
     {
