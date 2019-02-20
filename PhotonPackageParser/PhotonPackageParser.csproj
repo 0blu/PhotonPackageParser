@@ -54,7 +54,7 @@
   <ItemGroup>
     <Compile Include="CommandType.cs" />
     <Compile Include="MessageType.cs" />
-    <Compile Include="PhotonPackageParser.cs" />
+    <Compile Include="PhotonParser.cs" />
     <Compile Include="IPhotonPackageHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SegmentedPackage.cs" />

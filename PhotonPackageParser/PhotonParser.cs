@@ -5,7 +5,7 @@ using System.IO;
 
 namespace PhotonPackageParser
 {
-    public class PhotonPackageParser
+    public class PhotonParser
     {
         private const int CommandHeaderLength = 12;
         private const int PhotonHeaderLength = 12;
@@ -13,7 +13,7 @@ namespace PhotonPackageParser
         private readonly IPhotonPackageHandler handler;
         private readonly Dictionary<int, SegmentedPackage> pendingSegments;
 
-        public PhotonPackageParser(IPhotonPackageHandler handler)
+        public PhotonParser(IPhotonPackageHandler handler)
         {
             this.handler = handler;
             pendingSegments = new Dictionary<int, SegmentedPackage>();
