@@ -1,8 +1,8 @@
-﻿using System;
-using PcapDotNet.Core;
+﻿using PcapDotNet.Core;
 using PcapDotNet.Packets;
 using PcapDotNet.Packets.IpV4;
 using PcapDotNet.Packets.Transport;
+using System.Linq;
 
 namespace PhotonPackageParser.Example
 {
@@ -39,7 +39,7 @@ namespace PhotonPackageParser.Example
                 return;
             }
 
-            _photonPackageParser.DeserializeMessageAndCallback(udp);
+            _photonPackageParser.DeserializeMessageAndCallback(udp.Payload.ToArray());
         }
     }
 }

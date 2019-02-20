@@ -1,70 +1,63 @@
-﻿using PcapDotNet.Packets.Transport;
-using Protocol16;
+﻿using Protocol16;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 namespace PhotonPackageParser
 {
     public class PhotonPackageParser
     {
-        private readonly IPhotonPackageHandler _handler;
-
-        private class SegmentedPackage
-        {
-            public int TotalLength;
-            public int BytesWritten;
-            public byte[] TotalPayload;
-        }
-
         private const int CommandHeaderLength = 12;
         private const int PhotonHeaderLength = 12;
 
-        private readonly Dictionary<int, SegmentedPackage> _pendingSegments = new Dictionary<int, SegmentedPackage>();
+        private readonly IPhotonPackageHandler handler;
+        private readonly Dictionary<int, SegmentedPackage> pendingSegments;
 
         public PhotonPackageParser(IPhotonPackageHandler handler)
         {
-            _handler = handler;
+            this.handler = handler;
+            pendingSegments = new Dictionary<int, SegmentedPackage>();
         }
 
-        public void DeserializeMessageAndCallback(TransportDatagram datagram)
+        public void DeserializeMessageAndCallback(byte[] payload)
         {
-            if (datagram.Payload.Length < PhotonHeaderLength)
+            if (payload.Length < PhotonHeaderLength)
+            {
                 return;
+            }
 
-            byte[] source = datagram.Payload.ToArray();
             int offset = 0;
-
-            Deserializer.Deserialize(out short peerId, source, ref offset);
-            ReadByte(out byte flags, source, ref offset);
-            ReadByte(out byte commandCount, source, ref offset);
-            Deserializer.Deserialize(out int timestamp, source, ref offset);
-            Deserializer.Deserialize(out int challenge, source, ref offset);
+            Deserializer.Deserialize(out short peerId, payload, ref offset);
+            ReadByte(out byte flags, payload, ref offset);
+            ReadByte(out byte commandCount, payload, ref offset);
+            Deserializer.Deserialize(out int timestamp, payload, ref offset);
+            Deserializer.Deserialize(out int challenge, payload, ref offset);
 
             bool isEncrypted = flags == 1;
             bool isCrcEnabled = flags == 0xCC;
 
             if (isEncrypted)
             {
-                return;// Encrypted packages are not supported
+                // Encrypted packages are not supported
+                return;
             }
 
             if (isCrcEnabled)
             {
                 int ignoredOffset = 0;
-                Deserializer.Deserialize(out int crc, source, ref ignoredOffset);
-                Serializer.Serialize(0, source, ref offset);
+                Deserializer.Deserialize(out int crc, payload, ref ignoredOffset);
+                Serializer.Serialize(0, payload, ref offset);
 
-                if (crc != CrcCalculator.Calculate(source, source.Length))
+                if (crc != CrcCalculator.Calculate(payload, payload.Length))
                 {
-                    return;// Invalid crc
+                    // Invalid crc
+                    return;
                 }
             }
 
-            for (var commandIdx = 0; commandIdx < commandCount; commandIdx++)
+            for (int commandIdx = 0; commandIdx < commandCount; commandIdx++)
             {
-                HandleCommand(source, ref offset);
+                HandleCommand(payload, ref offset);
             }
         }
 
@@ -73,34 +66,46 @@ namespace PhotonPackageParser
             ReadByte(out byte commandType, source, ref offset);
             ReadByte(out byte channelId, source, ref offset);
             ReadByte(out byte commandFlags, source, ref offset);
-            offset++;// Skip 1 byte
+            // Skip 1 byte
+            offset++;
             Deserializer.Deserialize(out int commandLength, source, ref offset);
             Deserializer.Deserialize(out int sequenceNumber, source, ref offset);
             commandLength -= CommandHeaderLength;
 
-            switch (commandType)
+            switch ((CommandType)commandType)
             {
-                case 4:// Disconnect
-                    return;
-                case 7:// Send unreliable
-                    offset += 4;
-                    commandLength -= 4;
-                    goto case 6;
-                case 6:// Send reliable
-                    HandleSendReliable(source, ref offset, ref commandLength);
-                    break;
-                case 8:// Send fragment
-                    HandleSendFragment(source, ref offset, ref commandLength);
-                    break;
+                case CommandType.Disconnect:
+                    {
+                        return;
+                    }
+                case CommandType.SendUnreliable:
+                    {
+                        offset += 4;
+                        commandLength -= 4;
+                        goto case CommandType.SendReliable;
+                    }
+                case CommandType.SendReliable:
+                    {
+                        HandleSendReliable(source, ref offset, ref commandLength);
+                        break;
+                    }
+                case CommandType.SendFragment:
+                    {
+                        HandleSendFragment(source, ref offset, ref commandLength);
+                        break;
+                    }
                 default:
-                    offset += commandLength;
-                    break;
+                    {
+                        offset += commandLength;
+                        break;
+                    }
             }
         }
 
         private void HandleSendReliable(byte[] source, ref int offset, ref int commandLength)
         {
-            offset++;// Skip 1 byte
+            // Skip 1 byte
+            offset++;
             commandLength--;
             ReadByte(out byte messageType, source, ref offset);
             commandLength--;
@@ -111,20 +116,26 @@ namespace PhotonPackageParser
             payload.Seek(0L, SeekOrigin.Begin);
 
             offset += operationLength;
-            switch (messageType)
+            switch ((MessageType)messageType)
             {
-                case 2:// Operation Request
-                    var requestData = Protocol16Deserializer.DeserializeOperationRequest(payload);
-                    _handler.OnRequest(requestData.OperationCode, requestData.Parameters);
-                    break;
-                case 3:// Operation Response
-                    var responseData = Protocol16Deserializer.DeserializeOperationResponse(payload);
-                    _handler.OnResponse(responseData.OperationCode, responseData.ReturnCode, responseData.Parameters);
-                    break;
-                case 4:// Event
-                    var eventData = Protocol16Deserializer.DeserializeEventData(payload);
-                    _handler.OnEvent(eventData.Code, eventData.Parameters);
-                    break;
+                case MessageType.OperationRequest:
+                    {
+                        OperationRequest requestData = Protocol16Deserializer.DeserializeOperationRequest(payload);
+                        handler.OnRequest(requestData.OperationCode, requestData.Parameters);
+                        break;
+                    }
+                case MessageType.OperationResponse:
+                    {
+                        OperationResponse responseData = Protocol16Deserializer.DeserializeOperationResponse(payload);
+                        handler.OnResponse(responseData.OperationCode, responseData.ReturnCode, responseData.Parameters);
+                        break;
+                    }
+                case MessageType.Event:
+                    {
+                        EventData eventData = Protocol16Deserializer.DeserializeEventData(payload);
+                        handler.OnEvent(eventData.Code, eventData.Parameters);
+                        break;
+                    }
             }
         }
 
@@ -141,7 +152,7 @@ namespace PhotonPackageParser
             Deserializer.Deserialize(out int fragmentOffset, source, ref offset);
             commandLength -= 4;
 
-            var fragmentLength = commandLength;
+            int fragmentLength = commandLength;
             HandleSegementedPayload(startSequenceNumber, totalLength, fragmentLength, fragmentOffset, source, ref offset);
         }
 
@@ -154,7 +165,7 @@ namespace PhotonPackageParser
 
         private void HandleSegementedPayload(int startSequenceNumber, int totalLength, int fragmentLength, int fragmentOffset, byte[] source, ref int offset)
         {
-            var segmentedPackage = GetSegmentedPackage(startSequenceNumber, totalLength);
+            SegmentedPackage segmentedPackage = GetSegmentedPackage(startSequenceNumber, totalLength);
 
             Buffer.BlockCopy(source, offset, segmentedPackage.TotalPayload, fragmentOffset, fragmentLength);
             offset += fragmentLength;
@@ -162,22 +173,24 @@ namespace PhotonPackageParser
 
             if (segmentedPackage.BytesWritten >= segmentedPackage.TotalLength)
             {
-                _pendingSegments.Remove(startSequenceNumber);
+                pendingSegments.Remove(startSequenceNumber);
                 HandleFinishedSegmentedPackage(segmentedPackage.TotalPayload);
             }
         }
 
         private SegmentedPackage GetSegmentedPackage(int startSequenceNumber, int totalLength)
         {
-            if (_pendingSegments.TryGetValue(startSequenceNumber, out var segmentedPackage))
+            if (pendingSegments.TryGetValue(startSequenceNumber, out SegmentedPackage segmentedPackage))
+            {
                 return segmentedPackage;
+            }
 
             segmentedPackage = new SegmentedPackage
             {
                 TotalLength = totalLength,
                 TotalPayload = new byte[totalLength],
             };
-            _pendingSegments.Add(startSequenceNumber, segmentedPackage);
+            pendingSegments.Add(startSequenceNumber, segmentedPackage);
 
             return segmentedPackage;
         }
