@@ -5,21 +5,19 @@ using System.IO;
 
 namespace PhotonPackageParser
 {
-    public class PhotonParser
+    public abstract class PhotonParser
     {
         private const int CommandHeaderLength = 12;
         private const int PhotonHeaderLength = 12;
 
-        private readonly IPhotonPackageHandler handler;
         private readonly Dictionary<int, SegmentedPackage> pendingSegments;
 
-        public PhotonParser(IPhotonPackageHandler handler)
+        public PhotonParser()
         {
-            this.handler = handler;
             pendingSegments = new Dictionary<int, SegmentedPackage>();
         }
 
-        public void DeserializeMessageAndCallback(byte[] payload)
+        public void ReceivePacket(byte[] payload)
         {
             if (payload.Length < PhotonHeaderLength)
             {
@@ -60,6 +58,12 @@ namespace PhotonPackageParser
                 HandleCommand(payload, ref offset);
             }
         }
+
+        protected abstract void OnRequest(byte OperationCode, Dictionary<byte, object> Parameters);
+
+        protected abstract void OnResponse(byte OperationCode, short ReturnCode, string DebugMessage, Dictionary<byte, object> Parameters);
+
+        protected abstract void OnEvent(byte Code, Dictionary<byte, object> Parameters);
 
         private void HandleCommand(byte[] source, ref int offset)
         {
@@ -121,19 +125,19 @@ namespace PhotonPackageParser
                 case MessageType.OperationRequest:
                     {
                         OperationRequest requestData = Protocol16Deserializer.DeserializeOperationRequest(payload);
-                        handler.OnRequest(requestData.OperationCode, requestData.Parameters);
+                        OnRequest(requestData.OperationCode, requestData.Parameters);
                         break;
                     }
                 case MessageType.OperationResponse:
                     {
                         OperationResponse responseData = Protocol16Deserializer.DeserializeOperationResponse(payload);
-                        handler.OnResponse(responseData.OperationCode, responseData.ReturnCode, responseData.Parameters);
+                        OnResponse(responseData.OperationCode, responseData.ReturnCode, responseData.DebugMessage, responseData.Parameters);
                         break;
                     }
                 case MessageType.Event:
                     {
                         EventData eventData = Protocol16Deserializer.DeserializeEventData(payload);
-                        handler.OnEvent(eventData.Code, eventData.Parameters);
+                        OnEvent(eventData.Code, eventData.Parameters);
                         break;
                     }
             }
