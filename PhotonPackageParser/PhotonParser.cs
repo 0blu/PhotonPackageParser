@@ -10,12 +10,7 @@ namespace PhotonPackageParser
         private const int CommandHeaderLength = 12;
         private const int PhotonHeaderLength = 12;
 
-        private readonly Dictionary<int, SegmentedPackage> pendingSegments;
-
-        public PhotonParser()
-        {
-            pendingSegments = new Dictionary<int, SegmentedPackage>();
-        }
+        private readonly Dictionary<int, SegmentedPackage> pendingSegments = new Dictionary<int, SegmentedPackage>();
 
         public void ReceivePacket(byte[] payload)
         {
@@ -59,11 +54,11 @@ namespace PhotonPackageParser
             }
         }
 
-        protected abstract void OnRequest(byte OperationCode, Dictionary<byte, object> Parameters);
+        protected abstract void OnRequest(byte operationCode, Dictionary<byte, object> parameters);
 
-        protected abstract void OnResponse(byte OperationCode, short ReturnCode, string DebugMessage, Dictionary<byte, object> Parameters);
+        protected abstract void OnResponse(byte operationCode, short returnCode, string debugMessage, Dictionary<byte, object> parameters);
 
-        protected abstract void OnEvent(byte Code, Dictionary<byte, object> Parameters);
+        protected abstract void OnEvent(byte code, Dictionary<byte, object> parameters);
 
         private void HandleCommand(byte[] source, ref int offset)
         {
@@ -157,7 +152,7 @@ namespace PhotonPackageParser
             commandLength -= 4;
 
             int fragmentLength = commandLength;
-            HandleSegementedPayload(startSequenceNumber, totalLength, fragmentLength, fragmentOffset, source, ref offset);
+            HandleSegmentedPayload(startSequenceNumber, totalLength, fragmentLength, fragmentOffset, source, ref offset);
         }
 
         private void HandleFinishedSegmentedPackage(byte[] totalPayload)
@@ -167,7 +162,7 @@ namespace PhotonPackageParser
             HandleSendReliable(totalPayload, ref offset, ref commandLength);
         }
 
-        private void HandleSegementedPayload(int startSequenceNumber, int totalLength, int fragmentLength, int fragmentOffset, byte[] source, ref int offset)
+        private void HandleSegmentedPayload(int startSequenceNumber, int totalLength, int fragmentLength, int fragmentOffset, byte[] source, ref int offset)
         {
             SegmentedPackage segmentedPackage = GetSegmentedPackage(startSequenceNumber, totalLength);
 

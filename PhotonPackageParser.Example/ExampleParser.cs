@@ -5,17 +5,17 @@ namespace PhotonPackageParser.Example
 {
     public class ExampleParser : PhotonParser
     {
-        protected override void OnEvent(byte Code, Dictionary<byte, object> Parameters)
+        protected override void OnEvent(byte code, Dictionary<byte, object> parameters)
         {
             Console.WriteLine("OnEvent");
         }
 
-        protected override void OnRequest(byte OperationCode, Dictionary<byte, object> Parameters)
+        protected override void OnRequest(byte operationCode, Dictionary<byte, object> parameters)
         {
             Console.WriteLine("OnRequest");
         }
 
-        protected override void OnResponse(byte OperationCode, short ReturnCode, string DebugMessage, Dictionary<byte, object> Parameters)
+        protected override void OnResponse(byte operationCode, short returnCode, string debugMessage, Dictionary<byte, object> parameters)
         {
             Console.WriteLine("OnResponse");
         }
