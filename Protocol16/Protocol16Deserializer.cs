@@ -16,7 +16,7 @@ namespace Protocol16
         #endregion
 
         #region methods
-        public static object Deserialize(Protocol16Stream stream, byte typeCode)
+        public static object Deserialize(Protocol16Stream input, byte typeCode)
         {
             switch ((Protocol16Type)typeCode)
             {
@@ -24,66 +24,66 @@ namespace Protocol16
                 case Protocol16Type.Null:
                     return null;
                 case Protocol16Type.Dictionary:
-                    return DeserializeDictionary(stream);
+                    return DeserializeDictionary(input);
                 case Protocol16Type.StringArray:
-                    return DeserializeStringArray(stream);
+                    return DeserializeStringArray(input);
                 case Protocol16Type.Byte:
-                    return DeserializeByte(stream);
+                    return DeserializeByte(input);
                 case Protocol16Type.Double:
-                    return DeserializeDouble(stream);
+                    return DeserializeDouble(input);
                 case Protocol16Type.EventData:
-                    return DeserializeEventData(stream);
+                    return DeserializeEventData(input);
                 case Protocol16Type.Float:
-                    return DeserializeFloat(stream);
+                    return DeserializeFloat(input);
                 case Protocol16Type.Integer:
-                    return DeserializeInteger(stream);
+                    return DeserializeInteger(input);
                 case Protocol16Type.Short:
-                    return DeserializeShort(stream);
+                    return DeserializeShort(input);
                 case Protocol16Type.Long:
-                    return DeserializeLong(stream);
+                    return DeserializeLong(input);
                 case Protocol16Type.IntegerArray:
-                    return DeserializeIntArray(stream);
+                    return DeserializeIntArray(input);
                 case Protocol16Type.Boolean:
-                    return DeserializeBoolean(stream);
+                    return DeserializeBoolean(input);
                 case Protocol16Type.OperationResponse:
-                    return DeserializeOperationResponse(stream);
+                    return DeserializeOperationResponse(input);
                 case Protocol16Type.OperationRequest:
-                    return DeserializeOperationRequest(stream);
+                    return DeserializeOperationRequest(input);
                 case Protocol16Type.String:
-                    return DeserializeString(stream);
+                    return DeserializeString(input);
                 case Protocol16Type.ByteArray:
-                    return DeserializeByteArray(stream);
+                    return DeserializeByteArray(input);
                 case Protocol16Type.Array:
-                    return DeserializeArray(stream);
+                    return DeserializeArray(input);
                 case Protocol16Type.ObjectArray:
-                    return DeserializeObjectArray(stream);
+                    return DeserializeObjectArray(input);
                 default:
                     throw new ArgumentException($"Type code: {typeCode} not implemented.");
             }
         }
 
-        public static OperationRequest DeserializeOperationRequest(Protocol16Stream stream)
+        public static OperationRequest DeserializeOperationRequest(Protocol16Stream input)
         {
-            byte operationCode = DeserializeByte(stream);
-            Dictionary<byte, object> parameters = DeserializeParameterTable(stream);
+            byte operationCode = DeserializeByte(input);
+            Dictionary<byte, object> parameters = DeserializeParameterTable(input);
 
             return new OperationRequest(operationCode, parameters);
         }
 
-        public static OperationResponse DeserializeOperationResponse(Protocol16Stream stream)
+        public static OperationResponse DeserializeOperationResponse(Protocol16Stream input)
         {
-            byte operationCode = DeserializeByte(stream);
-            short returnCode = DeserializeShort(stream);
-            string debugMessage = (Deserialize(stream, DeserializeByte(stream)) as string);
-            Dictionary<byte, object> parameters = DeserializeParameterTable(stream);
+            byte operationCode = DeserializeByte(input);
+            short returnCode = DeserializeShort(input);
+            string debugMessage = (Deserialize(input, DeserializeByte(input)) as string);
+            Dictionary<byte, object> parameters = DeserializeParameterTable(input);
 
             return new OperationResponse(operationCode, returnCode, debugMessage, parameters);
         }
 
-        public static EventData DeserializeEventData(Protocol16Stream stream)
+        public static EventData DeserializeEventData(Protocol16Stream input)
         {
-            byte code = DeserializeByte(stream);
-            Dictionary<byte, object> parameters = DeserializeParameterTable(stream);
+            byte code = DeserializeByte(input);
+            Dictionary<byte, object> parameters = DeserializeParameterTable(input);
 
             return new EventData(code, parameters);
         }
@@ -136,39 +136,39 @@ namespace Protocol16
             }
         }
 
-        private static byte DeserializeByte(Protocol16Stream stream)
+        private static byte DeserializeByte(Protocol16Stream input)
         {
-            return (byte)stream.ReadByte();
+            return (byte)input.ReadByte();
         }
 
-        private static bool DeserializeBoolean(Protocol16Stream stream)
+        private static bool DeserializeBoolean(Protocol16Stream input)
         {
-            return stream.ReadByte() != 0;
+            return input.ReadByte() != 0;
         }
 
-        public static short DeserializeShort(Protocol16Stream stream)
+        public static short DeserializeShort(Protocol16Stream input)
         {
             var buffer = new byte[shortSize];
 
-            stream.Read(buffer, 0, shortSize);
+            input.Read(buffer, 0, shortSize);
 
             return (short)(buffer[0] << 8 | buffer[1]);
         }
 
-        private static int DeserializeInteger(Protocol16Stream stream)
+        private static int DeserializeInteger(Protocol16Stream input)
         {
             var buffer = new byte[integerSize];
 
-            stream.Read(buffer, 0, integerSize);
+            input.Read(buffer, 0, integerSize);
 
             return buffer[0] << 24 | buffer[1] << 16 | buffer[2] << 8 | buffer[3];
         }
 
-        private static long DeserializeLong(Protocol16Stream stream)
+        private static long DeserializeLong(Protocol16Stream input)
         {
             var buffer = new byte[longSize];
 
-            stream.Read(buffer, 0, longSize);
+            input.Read(buffer, 0, longSize);
             if (BitConverter.IsLittleEndian)
             {
                 return (long)buffer[0] << 56 | (long)buffer[1] << 48 | (long)buffer[2] << 40 | (long)buffer[3] << 32 | (long)buffer[4] << 24 | (long)buffer[5] << 16 | (long)buffer[6] << 8 | buffer[7];
@@ -177,11 +177,11 @@ namespace Protocol16
             return BitConverter.ToInt64(buffer, 0);
         }
 
-        private static float DeserializeFloat(Protocol16Stream stream)
+        private static float DeserializeFloat(Protocol16Stream input)
         {
             var buffer = new byte[floatSize];
 
-            stream.Read(buffer, 0, floatSize);
+            input.Read(buffer, 0, floatSize);
             if (BitConverter.IsLittleEndian)
             {
                 Array.Reverse(buffer);
@@ -190,11 +190,11 @@ namespace Protocol16
             return BitConverter.ToSingle(buffer, 0);
         }
 
-        private static double DeserializeDouble(Protocol16Stream stream)
+        private static double DeserializeDouble(Protocol16Stream input)
         {
             var buffer = new byte[doubleSize];
 
-            stream.Read(buffer, 0, doubleSize);
+            input.Read(buffer, 0, doubleSize);
             if (BitConverter.IsLittleEndian)
             {
                 Array.Reverse(buffer);
@@ -203,75 +203,75 @@ namespace Protocol16
             return BitConverter.ToDouble(buffer, 0);
         }
 
-        private static string DeserializeString(Protocol16Stream stream)
+        private static string DeserializeString(Protocol16Stream input)
         {
-            int stringSize = DeserializeShort(stream);
+            int stringSize = DeserializeShort(input);
             if (stringSize == 0)
             {
                 return string.Empty;
             }
             var buffer = new byte[stringSize];
 
-            stream.Read(buffer, 0, stringSize);
+            input.Read(buffer, 0, stringSize);
 
             return Encoding.UTF8.GetString(buffer, 0, stringSize);
         }
 
-        private static byte[] DeserializeByteArray(Protocol16Stream stream)
+        private static byte[] DeserializeByteArray(Protocol16Stream input)
         {
-            int arraySize = DeserializeInteger(stream);
+            int arraySize = DeserializeInteger(input);
 
             var buffer = new byte[arraySize];
-            stream.Read(buffer, 0, arraySize);
+            input.Read(buffer, 0, arraySize);
 
             return buffer;
         }
 
-        private static int[] DeserializeIntArray(Protocol16Stream stream)
+        private static int[] DeserializeIntArray(Protocol16Stream input)
         {
-            int arraySize = DeserializeInteger(stream);
+            int arraySize = DeserializeInteger(input);
 
             var array = new int[arraySize];
             for (int i = 0; i < arraySize; i++)
             {
-                array[i] = DeserializeInteger(stream);
+                array[i] = DeserializeInteger(input);
             }
 
             return array;
         }
 
-        private static string[] DeserializeStringArray(Protocol16Stream stream)
+        private static string[] DeserializeStringArray(Protocol16Stream input)
         {
-            int arraySize = DeserializeShort(stream);
+            int arraySize = DeserializeShort(input);
 
             var array = new string[arraySize];
             for (int i = 0; i < arraySize; i++)
             {
-                array[i] = DeserializeString(stream);
+                array[i] = DeserializeString(input);
             }
 
             return array;
         }
 
-        private static object[] DeserializeObjectArray(Protocol16Stream stream)
+        private static object[] DeserializeObjectArray(Protocol16Stream input)
         {
-            int arraySize = DeserializeShort(stream);
+            int arraySize = DeserializeShort(input);
 
             var array = new object[arraySize];
             for (int i = 0; i < arraySize; i++)
             {
-                byte typeCode = (byte)stream.ReadByte();
-                array[i] = Deserialize(stream, typeCode);
+                byte typeCode = (byte)input.ReadByte();
+                array[i] = Deserialize(input, typeCode);
             }
 
             return array;
         }
 
-        private static IDictionary DeserializeDictionary(Protocol16Stream stream)
+        private static IDictionary DeserializeDictionary(Protocol16Stream input)
         {
-            byte keyTypeCode = (byte)stream.ReadByte();
-            byte valueTypeCode = (byte)stream.ReadByte();
-            int dictionarySize = DeserializeShort(stream);
+            byte keyTypeCode = (byte)input.ReadByte();
+            byte valueTypeCode = (byte)input.ReadByte();
+            int dictionarySize = DeserializeShort(input);
             Type keyType = GetTypeOfCode(keyTypeCode);
             Type valueType = GetTypeOfCode(valueTypeCode);
             Type dictionaryType = typeof(Dictionary<,>).MakeGenericType(new Type[]
@@ -283,17 +283,17 @@ namespace Protocol16
             IDictionary dictionary = Activator.CreateInstance(dictionaryType) as IDictionary;
             for (int i = 0; i < dictionarySize; i++)
             {
-                object key = Deserialize(stream, (keyTypeCode == 0 || keyTypeCode == 42) ? ((byte)stream.ReadByte()) : keyTypeCode);
-                object value = Deserialize(stream, (valueTypeCode == 0 || valueTypeCode == 42) ? ((byte)stream.ReadByte()) : valueTypeCode);
+                object key = Deserialize(input, (keyTypeCode == 0 || keyTypeCode == 42) ? ((byte)input.ReadByte()) : keyTypeCode);
+                object value = Deserialize(input, (valueTypeCode == 0 || valueTypeCode == 42) ? ((byte)input.ReadByte()) : valueTypeCode);
                 dictionary.Add(key, value);
             }
 
             return dictionary;
         }
 
-        private static bool DeserializeDictionaryArray(Protocol16Stream din, short size, out Array result)
+        private static bool DeserializeDictionaryArray(Protocol16Stream input, short size, out Array result)
         {
-            Type type = DeserializeDictionaryType(din, out byte keyTypeCode, out byte valueTypeCode);
+            Type type = DeserializeDictionaryType(input, out byte keyTypeCode, out byte valueTypeCode);
             result = Array.CreateInstance(type, size);
 
             for (short i = 0; i < size; i += 1)
@@ -302,28 +302,28 @@ namespace Protocol16
                 {
                     return false;
                 }
-                short arraySize = DeserializeShort(din);
+                short arraySize = DeserializeShort(input);
                 for (int j = 0; j < arraySize; j++)
                 {
                     object key;
                     if (keyTypeCode > 0)
                     {
-                        key = Deserialize(din, keyTypeCode);
+                        key = Deserialize(input, keyTypeCode);
                     }
                     else
                     {
-                        byte nextKeyTypeCode = (byte)din.ReadByte();
-                        key = Deserialize(din, nextKeyTypeCode);
+                        byte nextKeyTypeCode = (byte)input.ReadByte();
+                        key = Deserialize(input, nextKeyTypeCode);
                     }
                     object value;
                     if (valueTypeCode > 0)
                     {
-                        value = Deserialize(din, valueTypeCode);
+                        value = Deserialize(input, valueTypeCode);
                     }
                     else
                     {
-                        byte nextValueTypeCode = (byte)din.ReadByte();
-                        value = Deserialize(din, nextValueTypeCode);
+                        byte nextValueTypeCode = (byte)input.ReadByte();
+                        value = Deserialize(input, nextValueTypeCode);
                     }
                     dictionary.Add(key, value);
                 }
@@ -333,21 +333,21 @@ namespace Protocol16
             return true;
         }
 
-        private static Array DeserializeArray(Protocol16Stream din)
+        private static Array DeserializeArray(Protocol16Stream input)
         {
-            short size = DeserializeShort(din);
-            byte typeCode = (byte)din.ReadByte();
+            short size = DeserializeShort(input);
+            byte typeCode = (byte)input.ReadByte();
             switch ((Protocol16Type)typeCode)
             {
                 case Protocol16Type.Array:
                     {
-                        Array array = DeserializeArray(din);
+                        Array array = DeserializeArray(input);
                         Type arrayType = array.GetType();
                         Array result = Array.CreateInstance(arrayType, size);
                         result.SetValue(array, 0);
                         for (short i = 1; i < size; i += 1)
                         {
-                            array = DeserializeArray(din);
+                            array = DeserializeArray(input);
                             result.SetValue(array, i);
                         }
 
@@ -358,7 +358,7 @@ namespace Protocol16
                         Array result = Array.CreateInstance(typeof(byte[]), size);
                         for (short i = 0; i < size; i += 1)
                         {
-                            Array value = DeserializeByteArray(din);
+                            Array value = DeserializeByteArray(input);
                             result.SetValue(value, i);
                         }
 
@@ -366,7 +366,7 @@ namespace Protocol16
                     }
                 case Protocol16Type.Dictionary:
                     {
-                        DeserializeDictionaryArray(din, size, out Array result);
+                        DeserializeDictionaryArray(input, size, out Array result);
 
                         return result;
                     }
@@ -377,7 +377,7 @@ namespace Protocol16
 
                         for (short i = 0; i < size; i += 1)
                         {
-                            result.SetValue(Deserialize(din, typeCode), i);
+                            result.SetValue(Deserialize(input, typeCode), i);
                         }
 
                         return result;
@@ -385,10 +385,10 @@ namespace Protocol16
             }
         }
 
-        private static Type DeserializeDictionaryType(Protocol16Stream stream, out byte keyTypeCode, out byte valueTypeCode)
+        private static Type DeserializeDictionaryType(Protocol16Stream input, out byte keyTypeCode, out byte valueTypeCode)
         {
-            keyTypeCode = (byte)stream.ReadByte();
-            valueTypeCode = (byte)stream.ReadByte();
+            keyTypeCode = (byte)input.ReadByte();
+            valueTypeCode = (byte)input.ReadByte();
             Type keyType = GetTypeOfCode(keyTypeCode);
             Type valueType = GetTypeOfCode(valueTypeCode);
 
@@ -399,15 +399,15 @@ namespace Protocol16
             });
         }
 
-        private static Dictionary<byte, object> DeserializeParameterTable(Protocol16Stream stream)
+        private static Dictionary<byte, object> DeserializeParameterTable(Protocol16Stream input)
         {
-            int dicitonarySize = DeserializeShort(stream);
-            var dictionary = new Dictionary<byte, object>(dicitonarySize);
-            for (int i = 0; i < dicitonarySize; i++)
+            int dictionarySize = DeserializeShort(input);
+            var dictionary = new Dictionary<byte, object>(dictionarySize);
+            for (int i = 0; i < dictionarySize; i++)
             {
-                byte key = (byte)stream.ReadByte();
-                byte valueTypeCode = (byte)stream.ReadByte();
-                object value = Deserialize(stream, valueTypeCode);
+                byte key = (byte)input.ReadByte();
+                byte valueTypeCode = (byte)input.ReadByte();
+                object value = Deserialize(input, valueTypeCode);
                 dictionary[key] = value;
             }
 
