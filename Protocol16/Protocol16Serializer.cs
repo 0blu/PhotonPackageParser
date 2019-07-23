@@ -1,17 +1,17 @@
 ﻿using System;
-using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 
 namespace Protocol16
 {
     public static class Protocol16Serializer
     {
-        private static readonly ArrayPool<byte> _pool = ArrayPool<byte>.Shared;
-        private static readonly ArrayPool<long> _poolLong = ArrayPool<long>.Shared;
-        private static readonly ArrayPool<float> _poolFloat = ArrayPool<float>.Shared;
-        private static readonly ArrayPool<double> _poolDouble = ArrayPool<double>.Shared;
+        private static readonly ThreadLocal<byte[]> _byteBuffer = new ThreadLocal<byte[]>(() => new byte[sizeof(long)]);
+        private static readonly ThreadLocal<long[]> _longBuffer = new ThreadLocal<long[]>(() => new long[1]);
+        private static readonly ThreadLocal<float[]> _floatBuffer = new ThreadLocal<float[]>(() => new float[1]);
+        private static readonly ThreadLocal<double[]> _doubleBuffer = new ThreadLocal<double[]>(() => new double[1]);
 
         public static void Serialize(Protocol16Stream output, object obj, bool writeTypeCode)
         {
@@ -94,33 +94,30 @@ namespace Protocol16
         private static void SerializeShort(Protocol16Stream output, short value, bool writeTypeCode)
         {
             output.WriteTypeCodeIfTrue(Protocol16Type.Short, writeTypeCode);
-            byte[] buffer = _pool.Rent(sizeof(short));
+            var buffer = _byteBuffer.Value;
             buffer[0] = (byte)(value >> 8);
             buffer[1] = (byte)(value);
             output.Write(buffer, 0, sizeof(short));
-            _pool.Return(buffer);
         }
 
         private static void SerializeInteger(Protocol16Stream output, int value, bool writeTypeCode)
         {
             output.WriteTypeCodeIfTrue(Protocol16Type.Integer, writeTypeCode);
-            byte[] buffer = _pool.Rent(sizeof(int));
+            var buffer = _byteBuffer.Value;
             buffer[0] = (byte)(value >> 24);
             buffer[1] = (byte)(value >> 16);
             buffer[2] = (byte)(value >> 8);
             buffer[3] = (byte)(value);
             output.Write(buffer, 0, sizeof(int));
-            _pool.Return(buffer);
         }
 
         private static void SerializeLong(Protocol16Stream output, long value, bool writeTypeCode)
         {
             output.WriteTypeCodeIfTrue(Protocol16Type.Long, writeTypeCode);
-            long[] longBuffer = _poolLong.Rent(1);
+            var longBuffer = _longBuffer.Value;
             longBuffer[0] = value;
-            byte[] buffer = _pool.Rent(sizeof(long));
+            var buffer = _byteBuffer.Value;
             Buffer.BlockCopy(longBuffer, 0, buffer, 0, sizeof(long));
-            _poolLong.Return(longBuffer);
             if (BitConverter.IsLittleEndian)
             {
                 byte b0 = buffer[0];
@@ -137,17 +134,15 @@ namespace Protocol16
                 buffer[7] = b0;
             }
             output.Write(buffer, 0, sizeof(long));
-            _pool.Return(buffer);
         }
 
         private static void SerializeFloat(Protocol16Stream output, float value, bool writeTypeCode)
         {
             output.WriteTypeCodeIfTrue(Protocol16Type.Float, writeTypeCode);
-            float[] floatBuffer = _poolFloat.Rent(1);
+            var floatBuffer = _floatBuffer.Value;
             floatBuffer[0] = value;
-            byte[] buffer = _pool.Rent(sizeof(float));
+            var buffer = _byteBuffer.Value;
             Buffer.BlockCopy(floatBuffer, 0, buffer, 0, sizeof(float));
-            _poolFloat.Return(floatBuffer);
             if (BitConverter.IsLittleEndian)
             {
                 byte b0 = buffer[0];
@@ -158,17 +153,15 @@ namespace Protocol16
                 buffer[3] = b0;
             }
             output.Write(buffer, 0, sizeof(float));
-            _pool.Return(buffer);
         }
 
         private static void SerializeDouble(Protocol16Stream output, double value, bool writeTypeCode)
         {
             output.WriteTypeCodeIfTrue(Protocol16Type.Double, writeTypeCode);
-            double[] doubleBuffer = _poolDouble.Rent(1);
+            var doubleBuffer = _doubleBuffer.Value;
             doubleBuffer[0] = value;
-            byte[] buffer = _pool.Rent(sizeof(double));
+            var buffer = _byteBuffer.Value;
             Buffer.BlockCopy(doubleBuffer, 0, buffer, 0, sizeof(double));
-            _poolDouble.Return(doubleBuffer);
             if (BitConverter.IsLittleEndian)
             {
                 byte b0 = buffer[0];
@@ -185,7 +178,6 @@ namespace Protocol16
                 buffer[7] = b0;
             }
             output.Write(buffer, 0, sizeof(double));
-            _pool.Return(buffer);
         }
 
         private static void SerializeIntArray(Protocol16Stream output, int[] ints, bool writeTypeCode)
@@ -197,7 +189,7 @@ namespace Protocol16
             output.WriteTypeCodeIfTrue(Protocol16Type.Array, writeTypeCode);
             SerializeShort(output, (short)ints.Length, false);
             output.WriteTypeCodeIfTrue(Protocol16Type.Integer, true);
-            byte[] array = _pool.Rent(ints.Length * sizeof(int));
+            byte[] array = new byte[ints.Length * sizeof(int)];
             int num = 0;
             for (int i = 0; i < ints.Length; i++)
             {
@@ -207,7 +199,6 @@ namespace Protocol16
                 array[num++] = (byte)(ints[i]);
             }
             output.Write(array, 0, array.Length);
-            _pool.Return(array);
         }
 
         private static void SerializeString(Protocol16Stream output, string value, bool writeTypeCode)

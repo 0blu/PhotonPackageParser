@@ -8,7 +8,7 @@ namespace Protocol16.Tests
     public class Protocol16DeserializerTest
     {
         [Test]
-        public void DeserializeDicitonary()
+        public void DeserializeDictionary()
         {
             var buffer = new byte[]
             {
@@ -20,8 +20,8 @@ namespace Protocol16.Tests
             Dictionary<string, string> result = Protocol16Deserializer.Deserialize(stream, typeCode) as Dictionary<string, string>;
 
             Assert.NotNull(result);
-            Assert.AreEqual(result["testKey1"], "testValue1");
-            Assert.AreEqual(result["testKey2"], "testValue2");
+            Assert.AreEqual("testValue1", result["testKey1"]);
+            Assert.AreEqual("testValue2", result["testKey2"]);
         }
 
         [Test]
@@ -37,8 +37,8 @@ namespace Protocol16.Tests
             string[] result = Protocol16Deserializer.Deserialize(stream, typeCode) as string[];
 
             Assert.NotNull(result);
-            Assert.AreEqual(result[0], "test1");
-            Assert.AreEqual(result[1], "test2");
+            Assert.AreEqual("test1", result[0]);
+            Assert.AreEqual("test2", result[1]);
         }
 
         [Test]
@@ -54,7 +54,7 @@ namespace Protocol16.Tests
             byte? result = Protocol16Deserializer.Deserialize(stream, typeCode) as byte?;
 
             Assert.NotNull(result);
-            Assert.AreEqual(result, 6);
+            Assert.AreEqual(6, result);
         }
 
         [Test]
@@ -70,7 +70,7 @@ namespace Protocol16.Tests
             double? result = Protocol16Deserializer.Deserialize(stream, typeCode) as double?;
 
             Assert.NotNull(result);
-            Assert.AreEqual(result, 1234.55);
+            Assert.AreEqual(1234.55, result);
         }
 
         [Test]
@@ -86,9 +86,9 @@ namespace Protocol16.Tests
             EventData result = Protocol16Deserializer.Deserialize(stream, typeCode) as EventData;
 
             Assert.NotNull(result);
-            Assert.AreEqual(result.Code, 100);
-            Assert.AreEqual(result.Parameters[0], "test1");
-            Assert.AreEqual(result.Parameters[1], "test2");
+            Assert.AreEqual(100, result.Code);
+            Assert.AreEqual("test1", result.Parameters[0]);
+            Assert.AreEqual("test2", result.Parameters[1]);
         }
 
         [Test]
@@ -104,7 +104,7 @@ namespace Protocol16.Tests
             float? result = Protocol16Deserializer.Deserialize(stream, typeCode) as float?;
 
             Assert.NotNull(result);
-            Assert.AreEqual(result, 1234.55f);
+            Assert.AreEqual(1234.55f, result);
         }
 
         [Test]
@@ -120,7 +120,7 @@ namespace Protocol16.Tests
             int? result = Protocol16Deserializer.Deserialize(stream, typeCode) as int?;
 
             Assert.NotNull(result);
-            Assert.AreEqual(result, 1234);
+            Assert.AreEqual(1234, result);
         }
 
         [Test]
@@ -136,7 +136,7 @@ namespace Protocol16.Tests
             short? result = Protocol16Deserializer.Deserialize(stream, typeCode) as short?;
 
             Assert.NotNull(result);
-            Assert.AreEqual(result, 1234);
+            Assert.AreEqual(1234, result);
         }
 
         [Test]
@@ -152,7 +152,7 @@ namespace Protocol16.Tests
             long? result = Protocol16Deserializer.Deserialize(stream, typeCode) as long?;
 
             Assert.NotNull(result);
-            Assert.AreEqual(result, 1234L);
+            Assert.AreEqual(1234L, result);
         }
 
         [Test]
@@ -168,8 +168,8 @@ namespace Protocol16.Tests
             int[] result = Protocol16Deserializer.Deserialize(stream, typeCode) as int[];
 
             Assert.NotNull(result);
-            Assert.AreEqual(result[0], 0);
-            Assert.AreEqual(result[1], 1);
+            Assert.AreEqual(0, result[0]);
+            Assert.AreEqual(1, result[1]);      
         }
 
         [Test]
@@ -185,7 +185,7 @@ namespace Protocol16.Tests
             bool? result = Protocol16Deserializer.Deserialize(stream, typeCode) as bool?;
 
             Assert.NotNull(result);
-            Assert.AreEqual(result, true);
+            Assert.AreEqual(true, result);
         }
 
         [Test]
@@ -220,9 +220,9 @@ namespace Protocol16.Tests
             OperationRequest result = Protocol16Deserializer.Deserialize(stream, typeCode) as OperationRequest;
 
             Assert.NotNull(result);
-            Assert.AreEqual(result.OperationCode, 100);
-            Assert.AreEqual(result.Parameters[0], "test1");
-            Assert.AreEqual(result.Parameters[1], "test2");
+            Assert.AreEqual(100, result.OperationCode);
+            Assert.AreEqual("test1", result.Parameters[0]);
+            Assert.AreEqual("test2", result.Parameters[1]);
         }
 
         [Test]
@@ -238,7 +238,7 @@ namespace Protocol16.Tests
             string result = Protocol16Deserializer.Deserialize(stream, typeCode) as string;
 
             Assert.NotNull(result);
-            Assert.AreEqual(result, "test_message");
+            Assert.AreEqual("test_message", result);
         }
 
         [Test]
@@ -254,8 +254,8 @@ namespace Protocol16.Tests
             byte[] result = Protocol16Deserializer.Deserialize(stream, typeCode) as byte[];
 
             Assert.NotNull(result);
-            Assert.AreEqual(result[0], 6);
-            Assert.AreEqual(result[1], 7);
+            Assert.AreEqual(6, result[0]);
+            Assert.AreEqual(7, result[1]);
         }
 
         [Test]
@@ -273,7 +273,7 @@ namespace Protocol16.Tests
             Assert.NotNull(result);
             Assert.True(result.GetValue(0) is Dictionary<int, string>);
             var dictionary = result.GetValue(0) as Dictionary<int, string>;
-            Assert.AreEqual(dictionary[0], "test1");
+            Assert.AreEqual("test1", dictionary[0]);
         }
 
         [Test]
@@ -291,10 +291,10 @@ namespace Protocol16.Tests
             Assert.NotNull(result);
             Assert.True(result.GetValue(0) is byte[]);
             var byteArray = result.GetValue(0) as byte[];
-            Assert.AreEqual(byteArray[0], 0);
-            Assert.AreEqual(byteArray[1], 2);
-            Assert.AreEqual(byteArray[2], 4);
-            Assert.AreEqual(byteArray[3], 8);
+            Assert.AreEqual(0, byteArray[0]);
+            Assert.AreEqual(2, byteArray[1]);
+            Assert.AreEqual(4, byteArray[2]);
+            Assert.AreEqual(8, byteArray[3]);
         }
 
         [Test]
@@ -312,9 +312,9 @@ namespace Protocol16.Tests
             Assert.NotNull(result);
             Assert.True(result.GetValue(0) is int[]);
             var intArray = result.GetValue(0) as int[];
-            Assert.AreEqual(intArray[0], 1);
-            Assert.AreEqual(intArray[1], 2);
-            Assert.AreEqual(intArray[2], 3);
+            Assert.AreEqual(1, intArray[0]);
+            Assert.AreEqual(2, intArray[1]);
+            Assert.AreEqual(3, intArray[2]);
         }
 
         [Test]
@@ -330,8 +330,8 @@ namespace Protocol16.Tests
             object[] result = Protocol16Deserializer.Deserialize(stream, typeCode) as object[];
 
             Assert.NotNull(result);
-            Assert.AreEqual(result[0], "test1");
-            Assert.AreEqual(result[1], "test2");
+            Assert.AreEqual("test1", result[0]);
+            Assert.AreEqual("test2", result[1]);
         }
     }
 }
