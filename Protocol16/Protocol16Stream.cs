@@ -6,8 +6,8 @@ namespace Protocol16
     public class Protocol16Stream : Stream
     {
         #region fields
-        private int position;
-        private int length;
+        private int _position;
+        private int _length;
         #endregion
 
         #region ctors
@@ -19,56 +19,29 @@ namespace Protocol16
         public Protocol16Stream(byte[] buffer)
         {
             GetBuffer = buffer;
-            length = buffer.Length;
+            _length = buffer.Length;
         }
         #endregion
 
         #region properties
-        public override bool CanRead
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool CanRead => true;
 
-        public override bool CanSeek
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool CanSeek => true;
 
-        public override bool CanWrite
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool CanWrite => true;
 
-        public override long Length
-        {
-            get
-            {
-                return length;
-            }
-        }
+        public override long Length => _length;
 
         public override long Position
         {
-            get
-            {
-                return position;
-            }
+            get => _position;
             set
             {
-                position = (int)value;
-                if (length < position)
+                _position = (int)value;
+                if (_length < _position)
                 {
-                    length = position;
-                    CheckSize(length);
+                    _length = _position;
+                    ExpandIfNeeded(_length);
                 }
             }
         }
@@ -81,7 +54,7 @@ namespace Protocol16
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            int dif = length - position;
+            int dif = _length - _position;
             if (dif <= 0)
             {
                 return 0;
@@ -90,21 +63,21 @@ namespace Protocol16
             {
                 count = dif;
             }
-            Buffer.BlockCopy(GetBuffer, position, buffer, offset, count);
-            position += count;
+            Buffer.BlockCopy(GetBuffer, _position, buffer, offset, count);
+            _position += count;
 
             return count;
         }
 
         public override int ReadByte()
         {
-            if (position >= length)
+            if (_position >= _length)
             {
                 return -1;
             }
             byte[] array = GetBuffer;
-            int result = array[position];
-            position++;
+            int result = array[_position];
+            _position++;
 
             return result;
         }
@@ -119,10 +92,10 @@ namespace Protocol16
                     newLength = (int)offset;
                     break;
                 case SeekOrigin.Current:
-                    newLength = position + (int)offset;
+                    newLength = _position + (int)offset;
                     break;
                 case SeekOrigin.End:
-                    newLength = length + (int)offset;
+                    newLength = _length + (int)offset;
                     break;
                 default:
                     throw new ArgumentException("Invalid seek origin");
@@ -131,40 +104,40 @@ namespace Protocol16
             {
                 throw new ArgumentException("Seek before begin");
             }
-            if (newLength > length)
+            if (newLength > _length)
             {
                 throw new ArgumentException("Seek after end");
             }
-            position = newLength;
+            _position = newLength;
 
-            return position;
+            return _position;
         }
 
         public override void SetLength(long value)
         {
-            length = (int)value;
-            CheckSize(length);
-            if (position > length)
+            _length = (int)value;
+            ExpandIfNeeded(_length);
+            if (_position > _length)
             {
-                position = length;
+                _position = _length;
             }
         }
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            int sum = position + count;
-            CheckSize(sum);
-            if (sum > length)
+            int sum = _position + count;
+            ExpandIfNeeded(sum);
+            if (sum > _length)
             {
-                length = sum;
+                _length = sum;
             }
-            Buffer.BlockCopy(buffer, offset, GetBuffer, position, count);
-            position = sum;
+            Buffer.BlockCopy(buffer, offset, GetBuffer, _position, count);
+            _position = sum;
         }
         #endregion
 
         #region private methods
-        private bool CheckSize(long size)
+        private bool ExpandIfNeeded(long size)
         {
             if (size <= GetBuffer.Length)
             {

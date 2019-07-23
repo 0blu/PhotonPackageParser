@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
@@ -7,14 +8,7 @@ namespace Protocol16
 {
     public static class Protocol16Deserializer
     {
-        #region fields
-        private static readonly int shortSize = 2;
-        private static readonly int integerSize = 4;
-        private static readonly int longSize = 8;
-        private static readonly int floatSize = 4;
-        private static readonly int doubleSize = 8;
-        #endregion
-
+        private static readonly ArrayPool<byte> _pool = ArrayPool<byte>.Shared;
         #region methods
         public static object Deserialize(Protocol16Stream input, byte typeCode)
         {
@@ -136,9 +130,9 @@ namespace Protocol16
             }
         }
 
-        private static byte DeserializeByte(Protocol16Stream input)
+        private static byte DeserializeByte(Protocol16Stream stream)
         {
-            return (byte)input.ReadByte();
+            return (byte)stream.ReadByte();
         }
 
         private static bool DeserializeBoolean(Protocol16Stream input)
@@ -148,59 +142,79 @@ namespace Protocol16
 
         public static short DeserializeShort(Protocol16Stream input)
         {
-            var buffer = new byte[shortSize];
+            var buffer = _pool.Rent(sizeof(short));
+            input.Read(buffer, 0, buffer.Length);
 
-            input.Read(buffer, 0, shortSize);
+            short result = (short) (buffer[0] << 8 | buffer[1]);
 
-            return (short)(buffer[0] << 8 | buffer[1]);
+            _pool.Return(buffer);
+
+            return result;
         }
 
         private static int DeserializeInteger(Protocol16Stream input)
         {
-            var buffer = new byte[integerSize];
+            var buffer = _pool.Rent(sizeof(int));
+            input.Read(buffer, 0, sizeof(int));
 
-            input.Read(buffer, 0, integerSize);
+            int result = buffer[0] << 24 | buffer[1] << 16 | buffer[2] << 8 | buffer[3];
 
-            return buffer[0] << 24 | buffer[1] << 16 | buffer[2] << 8 | buffer[3];
+            _pool.Return(buffer);
+            return result;
         }
 
         private static long DeserializeLong(Protocol16Stream input)
         {
-            var buffer = new byte[longSize];
+            var buffer = _pool.Rent(sizeof(long));
+            input.Read(buffer, 0, sizeof(long));
 
-            input.Read(buffer, 0, longSize);
+            long result;
             if (BitConverter.IsLittleEndian)
             {
-                return (long)buffer[0] << 56 | (long)buffer[1] << 48 | (long)buffer[2] << 40 | (long)buffer[3] << 32 | (long)buffer[4] << 24 | (long)buffer[5] << 16 | (long)buffer[6] << 8 | buffer[7];
+                result = (long)buffer[0] << 56 | (long)buffer[1] << 48 | (long)buffer[2] << 40 | (long)buffer[3] << 32 | (long)buffer[4] << 24 | (long)buffer[5] << 16 | (long)buffer[6] << 8 | buffer[7];
+            }
+            else
+            {
+                result = BitConverter.ToInt64(buffer, 0);
             }
 
-            return BitConverter.ToInt64(buffer, 0);
+            _pool.Return(buffer);
+
+            return result;
         }
 
         private static float DeserializeFloat(Protocol16Stream input)
         {
-            var buffer = new byte[floatSize];
+            var buffer = _pool.Rent(sizeof(float));
+            input.Read(buffer, 0, sizeof(float));
 
-            input.Read(buffer, 0, floatSize);
             if (BitConverter.IsLittleEndian)
             {
                 Array.Reverse(buffer);
             }
 
-            return BitConverter.ToSingle(buffer, 0);
+            float result = BitConverter.ToSingle(buffer, 0);
+
+            _pool.Return(buffer);
+
+            return result;
         }
 
         private static double DeserializeDouble(Protocol16Stream input)
         {
-            var buffer = new byte[doubleSize];
+            var buffer = _pool.Rent(sizeof(double));
+            input.Read(buffer, 0, sizeof(double));
 
-            input.Read(buffer, 0, doubleSize);
             if (BitConverter.IsLittleEndian)
             {
                 Array.Reverse(buffer);
             }
 
-            return BitConverter.ToDouble(buffer, 0);
+            double result = BitConverter.ToDouble(buffer, 0);
+
+            _pool.Return(buffer);
+
+            return result;
         }
 
         private static string DeserializeString(Protocol16Stream input)
@@ -210,11 +224,16 @@ namespace Protocol16
             {
                 return string.Empty;
             }
-            var buffer = new byte[stringSize];
+            
+            var buffer = _pool.Rent(stringSize);
 
             input.Read(buffer, 0, stringSize);
 
-            return Encoding.UTF8.GetString(buffer, 0, stringSize);
+            string result = Encoding.UTF8.GetString(buffer, 0, stringSize);
+
+            _pool.Return(buffer);
+
+            return result;
         }
 
         private static byte[] DeserializeByteArray(Protocol16Stream input)
