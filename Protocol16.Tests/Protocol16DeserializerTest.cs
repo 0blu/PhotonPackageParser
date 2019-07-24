@@ -1,6 +1,8 @@
 ﻿using NUnit.Framework;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using Protocol16.Photon;
 
 namespace Protocol16.Tests
 {
@@ -8,69 +10,216 @@ namespace Protocol16.Tests
     public class Protocol16DeserializerTest
     {
         [Test]
+        public void DeserializeHashtable()
+        {
+            TestDeserializeMethod(new byte[]
+            {
+                0x68, 0x00, 0x02, 0x73, 0x00, 0x01, 0x61, 0x69,
+                0x00, 0x00, 0x00, 0x02, 0x69, 0x00, 0x00, 0x00,
+                0x04, 0x66, 0x40, 0x13, 0x33, 0x33,
+            }, new Hashtable
+            {
+                ["a"] = 2,
+                [4] = 2.3f,
+            });
+        }
+
+        [Test]
         public void DeserializeDictionary()
         {
-            var buffer = new byte[]
+            TestDeserializeMethod(new byte[]
             {
-                68, 115, 115, 0, 2, 0, 8, 116, 101, 115, 116, 75, 101, 121, 49, 0, 10, 116, 101, 115, 116, 86, 97, 108, 117, 101, 49, 0, 8, 116, 101, 115, 116, 75, 101, 121, 50, 0, 10, 116, 101, 115, 116, 86, 97, 108, 117, 101, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-            };
-
-            var stream = new Protocol16Stream(buffer);
-            byte typeCode = (byte)stream.ReadByte();
-            Dictionary<string, string> result = Protocol16Deserializer.Deserialize(stream, typeCode) as Dictionary<string, string>;
-
-            Assert.NotNull(result);
-            Assert.AreEqual("testValue1", result["testKey1"]);
-            Assert.AreEqual("testValue2", result["testKey2"]);
+                0x44, 0x73, 0x73, 0x00, 0x02, 0x00, 0x08, 0x74,
+                0x65, 0x73, 0x74, 0x4b, 0x65, 0x79, 0x31, 0x00,
+                0x0a, 0x74, 0x65, 0x73, 0x74, 0x56, 0x61, 0x6c,
+                0x75, 0x65, 0x31, 0x00, 0x08, 0x74, 0x65, 0x73,
+                0x74, 0x4b, 0x65, 0x79, 0x32, 0x00, 0x0a, 0x74,
+                0x65, 0x73, 0x74, 0x56, 0x61, 0x6c, 0x75, 0x65,
+                0x32,
+            }, new Dictionary<string, string>
+            {
+                ["testKey1"] = "testValue1",
+                ["testKey2"] = "testValue2",
+            });
         }
 
         [Test]
         public void DeserializeStringArray()
         {
-            var buffer = new byte[]
+            TestDeserializeMethod(new byte[]
             {
-                121, 0, 2, 115, 0, 5, 116, 101, 115, 116, 49, 0, 5, 116, 101, 115, 116, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-            };
-
-            var stream = new Protocol16Stream(buffer);
-            byte typeCode = (byte)stream.ReadByte();
-            string[] result = Protocol16Deserializer.Deserialize(stream, typeCode) as string[];
-
-            Assert.NotNull(result);
-            Assert.AreEqual("test1", result[0]);
-            Assert.AreEqual("test2", result[1]);
+                0x79, 0x00, 0x02, 0x73, 0x00, 0x05, 0x74, 0x65,
+                0x73, 0x74, 0x31, 0x00, 0x05, 0x74, 0x65, 0x73,
+                0x74, 0x32,
+            }, new[] {"test1", "test2"});
         }
 
         [Test]
         public void DeserializeByte()
         {
-            var buffer = new byte[]
+            TestDeserializeMethod(new byte[]
             {
-                98, 6
-            };
-
-            var stream = new Protocol16Stream(buffer);
-            byte typeCode = (byte)stream.ReadByte();
-            byte? result = Protocol16Deserializer.Deserialize(stream, typeCode) as byte?;
-
-            Assert.NotNull(result);
-            Assert.AreEqual(6, result);
+                0x62, 0x06
+            }, (byte)6);
         }
 
         [Test]
         public void DeserializeDouble()
         {
-            var buffer = new byte[]
+            TestDeserializeMethod(new byte[]
             {
-                100, 64, 147, 74, 51, 51, 51, 51, 51, 0, 0, 0, 0, 0, 0, 0
-            };
+                0x64, 0x40, 0x93, 0x4a, 0x33, 0x33, 0x33, 0x33,
+                0x33,
+            }, 1234.55d);
+        }
 
-            var stream = new Protocol16Stream(buffer);
-            byte typeCode = (byte)stream.ReadByte();
-            double? result = Protocol16Deserializer.Deserialize(stream, typeCode) as double?;
+        [Test]
+        public void DeserializeFloat()
+        {
+            TestDeserializeMethod(new byte[]
+            {
+                0x66, 0x44, 0x9A, 0x51, 0x9A,
+            }, 1234.55f);
+        }
 
-            Assert.NotNull(result);
-            Assert.AreEqual(1234.55, result);
+        [Test]
+        public void DeserializeInteger()
+        {
+            TestDeserializeMethod(new byte[]
+            {
+                0x69, 0x00, 0x00, 0x04, 0xD2,
+            }, 1234);
+        }
+
+        [Test]
+        public void DeserializeShort()
+        {
+            TestDeserializeMethod(new byte[]
+            {
+                0x6B, 0x04, 0xD2,
+            }, (short)1234);
+        }
+
+        [Test]
+        public void DeserializeLong()
+        {
+            TestDeserializeMethod(new byte[]
+            {
+                0x6C, 0x01, 0xBA, 0xD6, 0x53, 0xBE, 0xEC, 0x89,
+                0x8E,
+            }, 124647594879912334L);
+        }
+
+        [Test]
+        public void DeserializeIntegerArray()
+        {
+            TestDeserializeMethod(new byte[]
+            {
+                0x79, 0x00, 0x04, 0x69, 0x00, 0x00, 0x00, 0x01,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05,
+                0xFF, 0xFF, 0xFF, 0xFD,
+            }, new[] { 1, 0, 5, -3 });   
+        }
+
+        [Test]
+        public void DeserializeTrue()
+        {
+            TestDeserializeMethod(new byte[]
+            {
+                0x6f, 0x01,
+            }, true);
+        }
+
+        [Test]
+        public void DeserializeFalse()
+        {
+            TestDeserializeMethod(new byte[]
+            {
+                0x6f, 0x00,
+            }, false);
+        }
+
+        [Test]
+        public void DeserializeString()
+        {
+            TestDeserializeMethod(new byte[]
+            {
+                0x73, 0x00, 0x0C, 0x74, 0x65, 0x73, 0x74, 0x5F,
+                0x6D, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65,
+            }, "test_message");
+        }
+
+        [Test]
+        public void DeserializeByteArray()
+        {
+            TestDeserializeMethod(new byte[]
+            {
+                0x78, 0x00, 0x00, 0x00, 0x08, 0x01, 0x02, 0x03,
+                0x04, 0x05, 0x06, 0x00, 0xFF,
+            }, new byte[] { 1, 2, 3, 4, 5, 6, 0, 255 });
+        }
+
+        [Test]
+        public void Deserialize2dByteArray()
+        {
+            TestDeserializeMethod(new byte[]
+            {
+                0x79, 0x00, 0x02, 0x78, 0x00, 0x00, 0x00, 0x02,
+                0x01, 0x03, 0x00, 0x00, 0x00, 0x02, 0x04, 0x03,
+            }, new[] { new byte[] {1, 3}, new byte[] {4, 3} });
+        }
+
+        [Test]
+        public void Deserialize2dIntArray()
+        {
+            TestDeserializeMethod(new byte[]
+            {
+                0x79, 0x00, 0x02, 0x6E, 0x00, 0x00, 0x00, 0x02,
+                0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x03,
+                0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x04,
+                0x00, 0x00, 0x00, 0x02,
+            }, new[] { new[] { 1, 3 }, new[] { 4, 2 } });
+        }
+        
+        [Test]
+        public void DeserializeObjectArray()
+        {
+            TestDeserializeMethod(new byte[]
+            {
+                0x7A, 0x00, 0x03, 0x69, 0x00, 0x00, 0x00, 0x01,
+                0x73, 0x00, 0x01, 0x41, 0x44, 0x73, 0x73, 0x00,
+                0x01, 0x00, 0x03, 0x61, 0x62, 0x63, 0x00, 0x03,
+                0x64, 0x65, 0x66,
+            }, new object[]
+            {
+                1, "A", new Dictionary<string, string>
+                {
+                    ["abc"] = "def",
+                },
+            });
+        }
+
+        [Test]
+        public void DeserializeDictionaryArray()
+        {
+            TestDeserializeMethod(new byte[]
+            {
+                0x79, 0x00, 0x02, 0x44, 0x73, 0x73, 0x00, 0x01,
+                0x00, 0x03, 0x61, 0x62, 0x63, 0x00, 0x03, 0x64,
+                0x65, 0x66, 0x00, 0x01, 0x00, 0x03, 0x35, 0x2B,
+                0x35, 0x00, 0x0C, 0x39, 0x20, 0x71, 0x75, 0x69,
+                0x63, 0x6B, 0x20, 0x6D, 0x61, 0x74, 0x68,
+            }, new[]
+            {
+                new Dictionary<string, string>
+                {
+                    ["abc"] = "def",
+                },
+                new Dictionary<string, string>
+                {
+                    ["5+5"] = "9 quick math",
+                },
+            });
         }
 
         [Test]
@@ -78,12 +227,13 @@ namespace Protocol16.Tests
         {
             var buffer = new byte[]
             {
-                101, 100, 0, 2, 0, 115, 0, 5, 116, 101, 115, 116, 49, 1, 115, 0, 5, 116, 101, 115, 116, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0x65, 0x64, 0x00, 0x02, 0x00, 0x73, 0x00, 0x05,
+                0x74, 0x65, 0x73, 0x74, 0x31, 0x01, 0x73, 0x00,
+                0x05, 0x74, 0x65, 0x73, 0x74, 0x32,
             };
 
             var stream = new Protocol16Stream(buffer);
-            byte typeCode = (byte)stream.ReadByte();
-            EventData result = Protocol16Deserializer.Deserialize(stream, typeCode) as EventData;
+            EventData result = Protocol16Deserializer.Deserialize(stream) as EventData;
 
             Assert.NotNull(result);
             Assert.AreEqual(100, result.Code);
@@ -91,109 +241,16 @@ namespace Protocol16.Tests
             Assert.AreEqual("test2", result.Parameters[1]);
         }
 
-        [Test]
-        public void DeserializeFloat()
-        {
-            var buffer = new byte[]
-            {
-                102, 68, 154, 81, 154, 0, 0, 0
-            };
-
-            var stream = new Protocol16Stream(buffer);
-            byte typeCode = (byte)stream.ReadByte();
-            float? result = Protocol16Deserializer.Deserialize(stream, typeCode) as float?;
-
-            Assert.NotNull(result);
-            Assert.AreEqual(1234.55f, result);
-        }
-
-        [Test]
-        public void DeserializeInteger()
-        {
-            var buffer = new byte[]
-            {
-                105, 0, 0, 4, 210, 0, 0, 0
-            };
-
-            var stream = new Protocol16Stream(buffer);
-            byte typeCode = (byte)stream.ReadByte();
-            int? result = Protocol16Deserializer.Deserialize(stream, typeCode) as int?;
-
-            Assert.NotNull(result);
-            Assert.AreEqual(1234, result);
-        }
-
-        [Test]
-        public void DeserializeShort()
-        {
-            var buffer = new byte[]
-            {
-                107, 4, 210, 0
-            };
-
-            var stream = new Protocol16Stream(buffer);
-            byte typeCode = (byte)stream.ReadByte();
-            short? result = Protocol16Deserializer.Deserialize(stream, typeCode) as short?;
-
-            Assert.NotNull(result);
-            Assert.AreEqual(1234, result);
-        }
-
-        [Test]
-        public void DeserializeLong()
-        {
-            var buffer = new byte[]
-            {
-                108, 0, 0, 0, 0, 0, 0, 4, 210, 0, 0, 0, 0, 0, 0, 0
-            };
-
-            var stream = new Protocol16Stream(buffer);
-            byte typeCode = (byte)stream.ReadByte();
-            long? result = Protocol16Deserializer.Deserialize(stream, typeCode) as long?;
-
-            Assert.NotNull(result);
-            Assert.AreEqual(1234L, result);
-        }
-
-        [Test]
-        public void DeserializeIntegerArray()
-        {
-            var buffer = new byte[]
-            {
-                121, 0, 2, 105, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0
-            };
-
-            var stream = new Protocol16Stream(buffer);
-            byte typeCode = (byte)stream.ReadByte();
-            int[] result = Protocol16Deserializer.Deserialize(stream, typeCode) as int[];
-
-            Assert.NotNull(result);
-            Assert.AreEqual(0, result[0]);
-            Assert.AreEqual(1, result[1]);      
-        }
-
-        [Test]
-        public void DeserializeBoolean()
-        {
-            var buffer = new byte[]
-            {
-                111, 1
-            };
-
-            var stream = new Protocol16Stream(buffer);
-            byte typeCode = (byte)stream.ReadByte();
-            bool? result = Protocol16Deserializer.Deserialize(stream, typeCode) as bool?;
-
-            Assert.NotNull(result);
-            Assert.AreEqual(true, result);
-        }
 
         [Test]
         public void DeserializeOperationResponse()
         {
             var buffer = new byte[]
             {
-                112, 100, 0, 100, 42, 0, 2, 0, 115, 0, 5, 116, 101, 115, 116, 49, 1, 115, 0, 5, 116, 101, 115, 116, 50, 0, 0, 0, 0, 0, 0, 0
+                0x70, 0x64, 0x00, 0x65, 0x2a, 0x00, 0x02, 0x00,
+                0x73, 0x00, 0x05, 0x74, 0x65, 0x73, 0x74, 0x31,
+                0x01, 0x73, 0x00, 0x05, 0x74, 0x65, 0x73, 0x74,
+                0x32, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
             };
 
             var stream = new Protocol16Stream(buffer);
@@ -202,9 +259,36 @@ namespace Protocol16.Tests
 
             Assert.NotNull(result);
             Assert.AreEqual(result.OperationCode, 100);
-            Assert.AreEqual(result.ReturnCode, 100);
+            Assert.AreEqual(result.ReturnCode, 101);
             Assert.AreEqual(result.Parameters[0], "test1");
             Assert.AreEqual(result.Parameters[1], "test2");
+        }
+
+
+        [Test]
+        public void DeserializeOperationResponseWithDebugMessage()
+        {
+            var buffer = new byte[]
+            {
+                0x70, 0x64, 0x00, 0x66, 0x73, 0x00, 0x11, 0x53,
+                0x6F, 0x6D, 0x65, 0x44, 0x65, 0x62, 0x75, 0x67,
+                0x20, 0x6D, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65,
+                0x00, 0x02, 0x00, 0x73, 0x00, 0x05, 0x74, 0x65,
+                0x73, 0x74, 0x31, 0x01, 0x69, 0x00, 0x00, 0x00,
+                0x02,
+            };
+
+            var stream = new Protocol16Stream(buffer);
+            byte typeCode = (byte)stream.ReadByte();
+            OperationResponse result = Protocol16Deserializer.Deserialize(stream, typeCode) as OperationResponse;
+
+            Assert.NotNull(result);
+            Assert.AreEqual(result.OperationCode, 100);
+            Assert.AreEqual(result.ReturnCode, 102);
+            Assert.AreEqual(result.DebugMessage, "SomeDebug message");
+            Assert.AreEqual(result.Parameters[0], "test1");
+            Assert.AreEqual(result.Parameters[1], 2);
+
         }
 
         [Test]
@@ -212,7 +296,9 @@ namespace Protocol16.Tests
         {
             var buffer = new byte[]
             {
-                113, 100, 0, 2, 0, 115, 0, 5, 116, 101, 115, 116, 49, 1, 115, 0, 5, 116, 101, 115, 116, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0x71, 0x64, 0x00, 0x02, 0x00, 0x73, 0x00, 0x05,
+                0x74, 0x65, 0x73, 0x74, 0x31, 0x01, 0x73, 0x00,
+                0x05, 0x74, 0x65, 0x73, 0x74, 0x32,
             };
 
             var stream = new Protocol16Stream(buffer);
@@ -224,114 +310,12 @@ namespace Protocol16.Tests
             Assert.AreEqual("test1", result.Parameters[0]);
             Assert.AreEqual("test2", result.Parameters[1]);
         }
-
-        [Test]
-        public void DeserializeString()
+        
+        private void TestDeserializeMethod(byte[] byteInput, object expected)
         {
-            var buffer = new byte[]
-            {
-                115, 0, 12, 116, 101, 115, 116, 95, 109, 101, 115, 115, 97, 103, 101, 0
-            };
-
-            var stream = new Protocol16Stream(buffer);
-            byte typeCode = (byte)stream.ReadByte();
-            string result = Protocol16Deserializer.Deserialize(stream, typeCode) as string;
-
-            Assert.NotNull(result);
-            Assert.AreEqual("test_message", result);
-        }
-
-        [Test]
-        public void DeserializeByteArray()
-        {
-            var buffer = new byte[]
-            {
-                120, 0, 0, 0, 2, 6, 7, 0
-            };
-
-            var stream = new Protocol16Stream(buffer);
-            byte typeCode = (byte)stream.ReadByte();
-            byte[] result = Protocol16Deserializer.Deserialize(stream, typeCode) as byte[];
-
-            Assert.NotNull(result);
-            Assert.AreEqual(6, result[0]);
-            Assert.AreEqual(7, result[1]);
-        }
-
-        [Test]
-        public void DeserializeArrayDictionary()
-        {
-            var buffer = new byte[]
-            {
-                121, 0, 1, 68, 105, 115, 0, 1, 0, 0, 0, 0, 0, 5, 116, 101, 115, 116, 49, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-            };
-
-            var stream = new Protocol16Stream(buffer);
-            byte typeCode = (byte)stream.ReadByte();
-            Array result = Protocol16Deserializer.Deserialize(stream, typeCode) as Array;
-
-            Assert.NotNull(result);
-            Assert.True(result.GetValue(0) is Dictionary<int, string>);
-            var dictionary = result.GetValue(0) as Dictionary<int, string>;
-            Assert.AreEqual("test1", dictionary[0]);
-        }
-
-        [Test]
-        public void DeserializeArrayByteArray()
-        {
-            var buffer = new byte[]
-            {
-                121, 0, 1, 120, 0, 0, 0, 4, 0, 2, 4, 8, 0, 0, 0, 0
-            };
-
-            var stream = new Protocol16Stream(buffer);
-            byte typeCode = (byte)stream.ReadByte();
-            Array result = Protocol16Deserializer.Deserialize(stream, typeCode) as Array;
-
-            Assert.NotNull(result);
-            Assert.True(result.GetValue(0) is byte[]);
-            var byteArray = result.GetValue(0) as byte[];
-            Assert.AreEqual(0, byteArray[0]);
-            Assert.AreEqual(2, byteArray[1]);
-            Assert.AreEqual(4, byteArray[2]);
-            Assert.AreEqual(8, byteArray[3]);
-        }
-
-        [Test]
-        public void DeserializeArrayArray()
-        {
-            var buffer = new byte[]
-            {
-                121, 0, 1, 121, 0, 3, 105, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-            };
-
-            var stream = new Protocol16Stream(buffer);
-            byte typeCode = (byte)stream.ReadByte();
-            Array result = Protocol16Deserializer.Deserialize(stream, typeCode) as Array;
-
-            Assert.NotNull(result);
-            Assert.True(result.GetValue(0) is int[]);
-            var intArray = result.GetValue(0) as int[];
-            Assert.AreEqual(1, intArray[0]);
-            Assert.AreEqual(2, intArray[1]);
-            Assert.AreEqual(3, intArray[2]);
-        }
-
-        [Test]
-        public void DeserializeObjectArray()
-        {
-            var buffer = new byte[]
-            {
-                122, 0, 2, 115, 0, 5, 116, 101, 115, 116, 49, 115, 0, 5, 116, 101, 115, 116, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-            };
-
-            var stream = new Protocol16Stream(buffer);
-            byte typeCode = (byte)stream.ReadByte();
-            object[] result = Protocol16Deserializer.Deserialize(stream, typeCode) as object[];
-
-            Assert.NotNull(result);
-            Assert.AreEqual("test1", result[0]);
-            Assert.AreEqual("test2", result[1]);
+            var input = new Protocol16Stream(byteInput);
+            var actual = Protocol16Deserializer.Deserialize(input);
+            Assert.AreEqual(expected, actual);
         }
     }
 }

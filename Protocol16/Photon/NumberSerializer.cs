@@ -1,6 +1,6 @@
-﻿namespace Protocol16
+﻿namespace Protocol16.Photon
 {
-    public class Serializer
+    public class NumberSerializer
     {
         public static void Serialize(int value, byte[] target, ref int offset)
         {

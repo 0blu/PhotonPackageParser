@@ -1,4 +1,4 @@
-﻿namespace Protocol16
+﻿namespace Protocol16.Photon
 {
     public static class CrcCalculator
     {

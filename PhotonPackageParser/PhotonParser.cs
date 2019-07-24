@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Protocol16.Photon;
 
 namespace PhotonPackageParser
 {
@@ -10,7 +11,7 @@ namespace PhotonPackageParser
         private const int CommandHeaderLength = 12;
         private const int PhotonHeaderLength = 12;
 
-        private readonly Dictionary<int, SegmentedPackage> pendingSegments = new Dictionary<int, SegmentedPackage>();
+        private readonly Dictionary<int, SegmentedPackage> _pendingSegments = new Dictionary<int, SegmentedPackage>();
 
         public void ReceivePacket(byte[] payload)
         {
@@ -20,11 +21,11 @@ namespace PhotonPackageParser
             }
 
             int offset = 0;
-            Deserializer.Deserialize(out short peerId, payload, ref offset);
+            NumberDeserializer.Deserialize(out short peerId, payload, ref offset);
             ReadByte(out byte flags, payload, ref offset);
             ReadByte(out byte commandCount, payload, ref offset);
-            Deserializer.Deserialize(out int timestamp, payload, ref offset);
-            Deserializer.Deserialize(out int challenge, payload, ref offset);
+            NumberDeserializer.Deserialize(out int timestamp, payload, ref offset);
+            NumberDeserializer.Deserialize(out int challenge, payload, ref offset);
 
             bool isEncrypted = flags == 1;
             bool isCrcEnabled = flags == 0xCC;
@@ -38,8 +39,8 @@ namespace PhotonPackageParser
             if (isCrcEnabled)
             {
                 int ignoredOffset = 0;
-                Deserializer.Deserialize(out int crc, payload, ref ignoredOffset);
-                Serializer.Serialize(0, payload, ref offset);
+                NumberDeserializer.Deserialize(out int crc, payload, ref ignoredOffset);
+                NumberSerializer.Serialize(0, payload, ref offset);
 
                 if (crc != CrcCalculator.Calculate(payload, payload.Length))
                 {
@@ -67,8 +68,8 @@ namespace PhotonPackageParser
             ReadByte(out byte commandFlags, source, ref offset);
             // Skip 1 byte
             offset++;
-            Deserializer.Deserialize(out int commandLength, source, ref offset);
-            Deserializer.Deserialize(out int sequenceNumber, source, ref offset);
+            NumberDeserializer.Deserialize(out int commandLength, source, ref offset);
+            NumberDeserializer.Deserialize(out int sequenceNumber, source, ref offset);
             commandLength -= CommandHeaderLength;
 
             switch ((CommandType)commandType)
@@ -140,15 +141,15 @@ namespace PhotonPackageParser
 
         private void HandleSendFragment(byte[] source, ref int offset, ref int commandLength)
         {
-            Deserializer.Deserialize(out int startSequenceNumber, source, ref offset);
+            NumberDeserializer.Deserialize(out int startSequenceNumber, source, ref offset);
             commandLength -= 4;
-            Deserializer.Deserialize(out int fragmentCount, source, ref offset);
+            NumberDeserializer.Deserialize(out int fragmentCount, source, ref offset);
             commandLength -= 4;
-            Deserializer.Deserialize(out int fragmentNumber, source, ref offset);
+            NumberDeserializer.Deserialize(out int fragmentNumber, source, ref offset);
             commandLength -= 4;
-            Deserializer.Deserialize(out int totalLength, source, ref offset);
+            NumberDeserializer.Deserialize(out int totalLength, source, ref offset);
             commandLength -= 4;
-            Deserializer.Deserialize(out int fragmentOffset, source, ref offset);
+            NumberDeserializer.Deserialize(out int fragmentOffset, source, ref offset);
             commandLength -= 4;
 
             int fragmentLength = commandLength;
@@ -172,14 +173,14 @@ namespace PhotonPackageParser
 
             if (segmentedPackage.BytesWritten >= segmentedPackage.TotalLength)
             {
-                pendingSegments.Remove(startSequenceNumber);
+                _pendingSegments.Remove(startSequenceNumber);
                 HandleFinishedSegmentedPackage(segmentedPackage.TotalPayload);
             }
         }
 
         private SegmentedPackage GetSegmentedPackage(int startSequenceNumber, int totalLength)
         {
-            if (pendingSegments.TryGetValue(startSequenceNumber, out SegmentedPackage segmentedPackage))
+            if (_pendingSegments.TryGetValue(startSequenceNumber, out SegmentedPackage segmentedPackage))
             {
                 return segmentedPackage;
             }
@@ -189,7 +190,7 @@ namespace PhotonPackageParser
                 TotalLength = totalLength,
                 TotalPayload = new byte[totalLength],
             };
-            pendingSegments.Add(startSequenceNumber, segmentedPackage);
+            _pendingSegments.Add(startSequenceNumber, segmentedPackage);
 
             return segmentedPackage;
         }

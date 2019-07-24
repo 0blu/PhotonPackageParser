@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using Protocol16.Photon;
 
 namespace Protocol16
 {
@@ -21,7 +22,8 @@ namespace Protocol16
                 return;
             }
 
-            switch (TypeCodeToProtocol16Type(obj.GetType()))
+            Protocol16Type type = TypeCodeToProtocol16Type(obj.GetType());
+            switch (type)
             {
                 case Protocol16Type.Boolean:
                     SerializeBoolean(output, (bool)obj, writeTypeCode);
@@ -44,20 +46,17 @@ namespace Protocol16
                 case Protocol16Type.Double:
                     SerializeDouble(output, (double)obj, writeTypeCode);
                     return;
-                case Protocol16Type.IntegerArray:
-                    SerializeIntArray(output, (int[])obj, writeTypeCode);
-                    return;
                 case Protocol16Type.String:
                     SerializeString(output, (string)obj, writeTypeCode);
                     return;
                 case Protocol16Type.EventData:
                     SerializeEventData(output, (EventData)obj, writeTypeCode);
                     return;
+                case Protocol16Type.Hashtable:
+                    SerializeHashtable(output, (Hashtable)obj, writeTypeCode);
+                    return;
                 case Protocol16Type.Dictionary:
                     SerializeDictionary(output, (IDictionary)obj, writeTypeCode);
-                    return;
-                case Protocol16Type.StringArray:
-                    SerializeStringArray(output, (string[])obj, writeTypeCode);
                     return;
                 case Protocol16Type.OperationResponse:
                     SerializeOperationResponse(output, (OperationResponse)obj, writeTypeCode);
@@ -65,18 +64,30 @@ namespace Protocol16
                 case Protocol16Type.OperationRequest:
                     SerializeOperationRequest(output, (OperationRequest)obj, writeTypeCode);
                     return;
+                case Protocol16Type.IntegerArray:
+                case Protocol16Type.StringArray:
                 case Protocol16Type.ByteArray:
-                    SerializeByteArray(output, (byte[])obj, writeTypeCode);
-                    return;
-                case Protocol16Type.Array:
-                    SerializeArray(output, (Array)obj, writeTypeCode);
-                    return;
                 case Protocol16Type.ObjectArray:
-                    SerializeObjectArray(output, (object[])obj, writeTypeCode);
+                case Protocol16Type.Array:
+                    SerializeAnyArray(output, (Array)obj, writeTypeCode, type);
                     return;
             }
 
+            // Special case
+            if (obj is ArraySegment<byte> arraySegment)
+            {
+                SerializeArraySegment(output, arraySegment, writeTypeCode);
+                return;
+            }
+
             throw new ArgumentException($"Cannot serialize objects of type {obj.GetType()} / System.TypeCode: {Type.GetTypeCode(obj.GetType())}");
+        }
+
+        private static void SerializeArraySegment(Protocol16Stream output, ArraySegment<byte> arraySegment, bool writeTypeCode)
+        {
+            output.WriteTypeCodeIfTrue(Protocol16Type.ByteArray, writeTypeCode);
+            SerializeInteger(output, arraySegment.Count, false);
+            output.Write(arraySegment.Array, arraySegment.Offset, arraySegment.Count);
         }
 
         private static void SerializeBoolean(Protocol16Stream output, bool value, bool writeTypeCode)
@@ -147,8 +158,8 @@ namespace Protocol16
             {
                 byte b0 = buffer[0];
                 byte b1 = buffer[1];
-                buffer[0] = buffer[7];
-                buffer[1] = buffer[6];
+                buffer[0] = buffer[3];
+                buffer[1] = buffer[2];
                 buffer[2] = b1;
                 buffer[3] = b0;
             }
@@ -182,21 +193,16 @@ namespace Protocol16
 
         private static void SerializeIntArray(Protocol16Stream output, int[] ints, bool writeTypeCode)
         {
-            if (ints.Length > short.MaxValue)
+            output.WriteTypeCodeIfTrue(Protocol16Type.IntegerArray, writeTypeCode);
+            SerializeInteger(output, ints.Length, false);
+            var array = new byte[ints.Length * sizeof(int)];
+            var idx = 0;
+            foreach (var number in ints)
             {
-                throw new NotSupportedException($"int[] can only have a maximum size of {short.MaxValue} (short.MaxValue). Yours is: {ints.Length}");
-            }
-            output.WriteTypeCodeIfTrue(Protocol16Type.Array, writeTypeCode);
-            SerializeShort(output, (short)ints.Length, false);
-            output.WriteTypeCodeIfTrue(Protocol16Type.Integer, true);
-            byte[] array = new byte[ints.Length * sizeof(int)];
-            int num = 0;
-            for (int i = 0; i < ints.Length; i++)
-            {
-                array[num++] = (byte)(ints[i] >> 24);
-                array[num++] = (byte)(ints[i] >> 16);
-                array[num++] = (byte)(ints[i] >> 8);
-                array[num++] = (byte)(ints[i]);
+                array[idx++] = (byte)(number >> 24);
+                array[idx++] = (byte)(number >> 16);
+                array[idx++] = (byte)(number >> 8);
+                array[idx++] = (byte)(number);
             }
             output.Write(array, 0, array.Length);
         }
@@ -223,7 +229,7 @@ namespace Protocol16
             SerializeShort(output, (short)strings.Length, false);
             foreach (var s in strings)
             {
-                SerializeString(output, s, writeTypeCode);
+                SerializeString(output, s, false);
             }
         }
 
@@ -245,7 +251,8 @@ namespace Protocol16
             }
             else
             {
-                SerializeString(output, data.DebugMessage, false);
+                // WTF ExitGames, why did you set the writeCode to false?!
+                SerializeString(output, data.DebugMessage, true);
             }
             SerializeParameterTable(output, data.Parameters);
         }
@@ -280,14 +287,59 @@ namespace Protocol16
             output.Write(obj, 0, obj.Length);
         }
 
-        private static void SerializeArray(Protocol16Stream output, Array array, bool writeTypeCode)
+        private static void SerializeAnyArray(Protocol16Stream output, Array array, bool writeTypeCode, Protocol16Type arrayType)
+        {
+            if (arrayType == Protocol16Type.ObjectArray)
+            {
+                SerializeObjectArray(output, (object[])array, writeTypeCode);
+                return;
+            }
+
+            // Fallback to object array if null is included
+            var containsNull = false;
+            foreach (var element in array)
+            {
+                if (element == null)
+                {
+                    containsNull = true;
+                    break;
+                }
+            }
+
+            if (containsNull) {
+                SerializeObjectArray(output, (object[])array, writeTypeCode);
+                return;
+            }
+
+            switch (arrayType)
+            {
+                case Protocol16Type.StringArray:
+                    SerializeStringArray(output, (string[])array, writeTypeCode);
+                    return;
+                case Protocol16Type.IntegerArray:
+                    SerializeIntArray(output, (int[])array, writeTypeCode);
+                    break;
+                case Protocol16Type.ByteArray:
+                    SerializeByteArray(output, (byte[])array, writeTypeCode);
+                    break;
+                case Protocol16Type.Array:
+                    SerializeArrayWithSameElements(output, array, writeTypeCode);
+                    break;
+                default:
+                    throw new Exception("Unknown array type");
+            }
+
+
+        }
+
+        private static void SerializeArrayWithSameElements(Protocol16Stream output, Array array, bool writeTypeCode)
         {
             if (array.Length > short.MaxValue)
             {
                 throw new NotSupportedException($"Arrays can only have a maximum size of {short.MaxValue} (short.MaxValue). Yours is: {array.Length}");
             }
             output.WriteTypeCodeIfTrue(Protocol16Type.Array, writeTypeCode);
-            SerializeShort(output, (short)array.Length, writeTypeCode);
+            SerializeShort(output, (short)array.Length, false);
 
             Type elementType = array.GetType().GetElementType();
 
@@ -299,13 +351,12 @@ namespace Protocol16
             output.WriteTypeCodeIfTrue(protocol16Type, true);
             if (protocol16Type == Protocol16Type.Dictionary)
             {
-                // WTF ExitGames. Why are you trying to get GetGenericArguments() of an array..?!
-                // I think what you wanted to do is just giving the element type to SerializeDictionaryHeader not the array type
-                // TODO: need to test this
-                SerializeDictionaryHeader(output, (IDictionary)array, out var writeKeyCode, out var writeValueCode);
-                foreach (object o in array)
+                // WTF ExitGames, why are you trying to get GetGenericArguments() of an array..?!
+                // I think what you wanted to do is just give the element type to SerializeDictionaryHeader not the array type
+                SerializeDictionaryHeader(output, elementType, out var writeKeyCode, out var writeValueCode);
+                foreach (var o in array)
                 {
-                    SerializeDictionaryElements(output, (IDictionary) o, writeKeyCode, writeValueCode);
+                    SerializeDictionaryElements(output, (IDictionary)o, writeKeyCode, writeValueCode);
                 }
             }
             else
@@ -330,18 +381,23 @@ namespace Protocol16
                 Serialize(output, s, true);
             }
         }
-        
-        private static void SerializeDictionary(Protocol16Stream output, IDictionary data, bool writeTypeCode)
+        private static void SerializeHashtable(Protocol16Stream output, Hashtable hashtable, bool writeTypeCode)
+        {
+            output.WriteTypeCodeIfTrue(Protocol16Type.Hashtable, writeTypeCode);
+            SerializeDictionaryElements(output, hashtable, true, true);
+        }
+
+        private static void SerializeDictionary(Protocol16Stream output, IDictionary dictionary, bool writeTypeCode)
         {
             output.WriteTypeCodeIfTrue(Protocol16Type.Dictionary, writeTypeCode);
 
-            SerializeDictionaryHeader(output, data, out var writeKeyCode, out var writeValueCode);
-            SerializeDictionaryElements(output, data, writeKeyCode, writeValueCode);
+            SerializeDictionaryHeader(output, dictionary.GetType(), out var writeKeyCode, out var writeValueCode);
+            SerializeDictionaryElements(output, dictionary, writeKeyCode, writeValueCode);
         }
 
-        private static void SerializeDictionaryHeader(Protocol16Stream output, IDictionary data, out bool writeKeyCode, out bool writeValueCode)
+        private static void SerializeDictionaryHeader(Protocol16Stream output, Type dictionaryType, out bool writeKeyCode, out bool writeValueCode)
         {
-            Type[] genericArguments = data.GetType().GetGenericArguments();
+            Type[] genericArguments = dictionaryType.GetGenericArguments();
             writeKeyCode = (genericArguments[0] == typeof(object));
             writeValueCode = (genericArguments[1] == typeof(object));
             if (writeKeyCode)
@@ -417,14 +473,16 @@ namespace Protocol16
                     return Protocol16Type.Long;
                 case TypeCode.Single:
                     return Protocol16Type.Float;
+                case TypeCode.Double:
+                    return Protocol16Type.Double;
                 case TypeCode.String:
                     return Protocol16Type.String;
             }
 
             if (type.IsArray)
             {
-                Type elementType = type.GetElementType();
-
+                var elementType = type.GetElementType();
+                
                 if (elementType == typeof(byte))
                 {
                     return Protocol16Type.ByteArray;
@@ -440,17 +498,17 @@ namespace Protocol16
                     return Protocol16Type.IntegerArray;
                 }
 
+                if (elementType == typeof(object))
+                {
+                    return Protocol16Type.ObjectArray;
+                }
+
                 return Protocol16Type.Array;
             }
 
             if (type == typeof(Hashtable))
             {
-                throw new NotSupportedException("Hashtables are currently not supported");
-            }
-
-            if (type == typeof(ArraySegment<byte>))
-            {
-                throw new NotSupportedException("Byte array segment are currently not supported");
+                return Protocol16Type.Hashtable;
             }
 
             if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>))

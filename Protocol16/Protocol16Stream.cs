@@ -5,32 +5,25 @@ namespace Protocol16
 {
     public class Protocol16Stream : Stream
     {
-        #region fields
+        private byte[] _buffer;
         private int _position;
         private int _length;
-        #endregion
 
-        #region ctors
+        public override bool CanRead => true;
+        public override bool CanSeek => true;
+        public override bool CanWrite => true;
+        public override long Length => _length;
+
         public Protocol16Stream(int size = 0)
         {
-            GetBuffer = new byte[size];
+            _buffer = new byte[size];
         }
 
         public Protocol16Stream(byte[] buffer)
         {
-            GetBuffer = buffer;
+            _buffer = buffer;
             _length = buffer.Length;
         }
-        #endregion
-
-        #region properties
-        public override bool CanRead => true;
-
-        public override bool CanSeek => true;
-
-        public override bool CanWrite => true;
-
-        public override long Length => _length;
 
         public override long Position
         {
@@ -46,10 +39,8 @@ namespace Protocol16
             }
         }
 
-        public byte[] GetBuffer { get; private set; }
-        #endregion
+        public int Capacity => _buffer.Length;
 
-        #region methods
         public override void Flush() { }
 
         public override int Read(byte[] buffer, int offset, int count)
@@ -63,7 +54,7 @@ namespace Protocol16
             {
                 count = dif;
             }
-            Buffer.BlockCopy(GetBuffer, _position, buffer, offset, count);
+            Buffer.BlockCopy(_buffer, _position, buffer, offset, count);
             _position += count;
 
             return count;
@@ -75,7 +66,7 @@ namespace Protocol16
             {
                 return -1;
             }
-            byte[] array = GetBuffer;
+            byte[] array = _buffer;
             int result = array[_position];
             _position++;
 
@@ -131,33 +122,27 @@ namespace Protocol16
             {
                 _length = sum;
             }
-            Buffer.BlockCopy(buffer, offset, GetBuffer, _position, count);
+            Buffer.BlockCopy(buffer, offset, _buffer, _position, count);
             _position = sum;
         }
-        #endregion
 
-        #region private methods
-        private bool ExpandIfNeeded(long size)
+        private bool ExpandIfNeeded(long requiredSize)
         {
-            if (size <= GetBuffer.Length)
+            if (requiredSize <= Capacity)
             {
                 return false;
             }
-            int length = GetBuffer.Length;
-            if (length == 0)
+            int newCapacity = Capacity;
+            if (newCapacity == 0)
             {
-                length = 1;
+                newCapacity = 1;
             }
-            while (size > length)
+            while (requiredSize > newCapacity)
             {
-                length *= 2;
+                newCapacity *= 2;
             }
-            byte[] dst = new byte[length];
-            Buffer.BlockCopy(GetBuffer, 0, dst, 0, GetBuffer.Length);
-            GetBuffer = dst;
-
+            Array.Resize(ref _buffer, newCapacity);
             return true;
         }
-        #endregion
     }
 }

@@ -1,6 +1,6 @@
-﻿namespace Protocol16
+﻿namespace Protocol16.Photon
 {
-    public class Deserializer
+    public class NumberDeserializer
     {
         public static void Deserialize(out int value, byte[] source, ref int offset)
         {

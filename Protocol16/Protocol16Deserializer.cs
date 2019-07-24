@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using Protocol16.Photon;
 
 namespace Protocol16
 {
@@ -10,6 +11,12 @@ namespace Protocol16
     {
         private static readonly ThreadLocal<byte[]> _byteBuffer = new ThreadLocal<byte[]>(() => new byte[sizeof(long)]);
         #region methods
+
+        public static object Deserialize(Protocol16Stream input)
+        {
+            return Deserialize(input, (byte)input.ReadByte());
+        }
+
         public static object Deserialize(Protocol16Stream input, byte typeCode)
         {
             switch ((Protocol16Type)typeCode)
@@ -31,6 +38,8 @@ namespace Protocol16
                     return DeserializeFloat(input);
                 case Protocol16Type.Integer:
                     return DeserializeInteger(input);
+                case Protocol16Type.Hashtable:
+                    return DeserializeHashtable(input);
                 case Protocol16Type.Short:
                     return DeserializeShort(input);
                 case Protocol16Type.Long:
@@ -154,6 +163,14 @@ namespace Protocol16
             input.Read(buffer, 0, sizeof(int));
 
             return buffer[0] << 24 | buffer[1] << 16 | buffer[2] << 8 | buffer[3];
+        }
+
+        private static object DeserializeHashtable(Protocol16Stream input)
+        {
+            int size = DeserializeShort(input);
+            Hashtable output = new Hashtable(size);
+            DeserializeDictionaryElements(input, output, size, (byte)Protocol16Type.Unknown, (byte)Protocol16Type.Unknown);
+            return output;
         }
 
         private static long DeserializeLong(Protocol16Stream input)
@@ -289,15 +306,19 @@ namespace Protocol16
                 valueType
             });
 
-            IDictionary dictionary = Activator.CreateInstance(dictionaryType) as IDictionary;
+            IDictionary output = Activator.CreateInstance(dictionaryType) as IDictionary;
+            DeserializeDictionaryElements(input, output, dictionarySize, keyTypeCode, valueTypeCode);
+            return output;
+        }
+
+        private static void DeserializeDictionaryElements(Protocol16Stream input, IDictionary output, int dictionarySize, byte keyTypeCode, byte valueTypeCode)
+        {
             for (int i = 0; i < dictionarySize; i++)
             {
-                object key = Deserialize(input, (keyTypeCode == 0 || keyTypeCode == 42) ? ((byte)input.ReadByte()) : keyTypeCode);
-                object value = Deserialize(input, (valueTypeCode == 0 || valueTypeCode == 42) ? ((byte)input.ReadByte()) : valueTypeCode);
-                dictionary.Add(key, value);
+                object key = Deserialize(input, (keyTypeCode == 0 || keyTypeCode == 42) ? ((byte) input.ReadByte()) : keyTypeCode);
+                object value = Deserialize(input, (valueTypeCode == 0 || valueTypeCode == 42) ? ((byte) input.ReadByte()) : valueTypeCode);
+                output.Add(key, value);
             }
-
-            return dictionary;
         }
 
         private static bool DeserializeDictionaryArray(Protocol16Stream input, short size, out Array result)

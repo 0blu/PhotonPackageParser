@@ -11,6 +11,7 @@
         EventData = 101,        // e
         Float = 102,            // f
         Integer = 105,          // i
+        Hashtable = 104,        // j
         Short = 107,            // k
         Long = 108,             // l
         IntegerArray = 110,     // n

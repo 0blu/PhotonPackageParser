@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework;
+using Protocol16.Photon;
 
 namespace Protocol16.Tests
 {
@@ -14,10 +15,10 @@ namespace Protocol16.Tests
             };
             int offset = 0;
 
-            Deserializer.Deserialize(out short result, buffer, ref offset);
+            NumberDeserializer.Deserialize(out short result, buffer, ref offset);
 
-            Assert.AreEqual(result, short.MaxValue);
-            Assert.AreEqual(offset, 2);
+            Assert.AreEqual(short.MaxValue, result);
+            Assert.AreEqual(2, offset);
         }
 
         [Test]
@@ -29,10 +30,10 @@ namespace Protocol16.Tests
             };
             int offset = 0;
 
-            Deserializer.Deserialize(out int result, buffer, ref offset);
+            NumberDeserializer.Deserialize(out int result, buffer, ref offset);
 
-            Assert.AreEqual(result, int.MaxValue);
-            Assert.AreEqual(offset, 4);
+            Assert.AreEqual(int.MaxValue, result);
+            Assert.AreEqual(4, offset);
         }
     }
 }

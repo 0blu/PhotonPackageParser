@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework;
+using Protocol16.Photon;
 
 namespace Protocol16.Tests
 {
@@ -15,10 +16,10 @@ namespace Protocol16.Tests
             byte[] buffer = new byte[4];
             int offset = 0;
 
-            Serializer.Serialize(1234, buffer, ref offset);
+            NumberSerializer.Serialize(1234, buffer, ref offset);
 
-            Assert.AreEqual(buffer, resultBuffer);
-            Assert.AreEqual(offset, 4);
+            Assert.AreEqual(resultBuffer, buffer);
+            Assert.AreEqual(4, offset);
         }
     }
 }
