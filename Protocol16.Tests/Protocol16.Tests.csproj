@@ -64,7 +64,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Protocol16\Protocol16.csproj">
-      <Project>{591d37a8-2aae-40aa-b92a-4b52c86090a6}</Project>
+      <Project>{766ef179-605b-403b-839e-5f0858e2284b}</Project>
       <Name>Protocol16</Name>
     </ProjectReference>
   </ItemGroup>

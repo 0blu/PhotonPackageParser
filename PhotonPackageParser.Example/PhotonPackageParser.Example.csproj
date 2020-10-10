@@ -65,7 +65,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\PhotonPackageParser\PhotonPackageParser.csproj">
-      <Project>{78adad95-7e81-4baf-b7fa-5a53c7857a8b}</Project>
+      <Project>{f5c56cbb-25dc-41cf-8e99-fa19aa241fb9}</Project>
       <Name>PhotonPackageParser</Name>
     </ProjectReference>
   </ItemGroup>
