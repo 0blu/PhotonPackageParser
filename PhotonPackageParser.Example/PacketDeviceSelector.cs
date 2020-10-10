@@ -1,30 +1,25 @@
-﻿using PcapDotNet.Core;
+﻿using SharpPcap;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace PhotonPackageParser.Example
 {
     internal static class PacketDeviceSelector
     {
-        public static PacketDevice AskForPacketDevice()
+        public static ICaptureDevice AskForPacketDevice()
         {
             // Retrieve the device list from the local machine
-            IList<LivePacketDevice> allDevices = LivePacketDevice.AllLocalMachine;
+            CaptureDeviceList devices = CaptureDeviceList.Instance;
 
-            if (allDevices.Count == 0)
+            if (devices.Count == 0)
             {
                 throw new Exception("No interfaces found! Make sure WinPcap is installed.");
             }
 
             // Print the list
-            for (int i = 0; i != allDevices.Count; ++i)
+            for (int i = 0; i != devices.Count; ++i)
             {
-                LivePacketDevice device = allDevices[i];
+                ICaptureDevice device = devices[i];
                 Console.Write((i + 1) + ". ");
-                Console.Write(" " + string.Join(",",
-                                  device.Addresses.Where(x => x.Address.Family == SocketAddressFamily.Internet)
-                                      .Select(x => x.Address.ToString()).ToArray()) + " ");
                 if (device.Description != null)
                     Console.WriteLine(" (" + device.Description + ")");
                 else
@@ -34,16 +29,16 @@ namespace PhotonPackageParser.Example
             int deviceIndex;
             do
             {
-                Console.WriteLine("Enter the interface number (1-" + allDevices.Count + "):");
+                Console.WriteLine("Enter the interface number (1-" + devices.Count + "):");
                 string deviceIndexString = Console.ReadLine();
                 if (!int.TryParse(deviceIndexString, out deviceIndex) ||
-                    deviceIndex < 1 || deviceIndex > allDevices.Count)
+                    deviceIndex < 1 || deviceIndex > devices.Count)
                 {
                     deviceIndex = 0;
                 }
             } while (deviceIndex == 0);
 
-            return allDevices[deviceIndex - 1];
+            return devices[deviceIndex - 1];
         }
     }
 }

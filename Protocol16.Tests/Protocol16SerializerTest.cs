@@ -1,13 +1,12 @@
-﻿using System;
+﻿using NUnit.Framework;
+using Protocol16.Photon;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using NUnit.Framework;
-using Protocol16.Photon;
 
 namespace Protocol16.Tests
 {
-    [TestFixture]
     class Protocol16SerializerTest
     {
         [Test]
@@ -148,7 +147,7 @@ namespace Protocol16.Tests
                 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x02,
                 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x03,
                 0x00, 0x00, 0x00, 0x04,
-            }, new[] { new[] {1, 2}, new[] {3, 4} });
+            }, new[] { new[] { 1, 2 }, new[] { 3, 4 } });
         }
 
         [Test]
@@ -159,7 +158,7 @@ namespace Protocol16.Tests
                 0x61, 0x00, 0x04, 0x00, 0x05, 0x48, 0x65, 0x6C,
                 0x6C, 0x6F, 0x00, 0x05, 0x57, 0x6F, 0x72, 0x6C,
                 0x64, 0x00, 0x01, 0x21, 0x00, 0x00,
-            }, new [] { "Hello", "World", "!", "" });
+            }, new[] { "Hello", "World", "!", "" });
         }
 
         [Test]
@@ -183,7 +182,7 @@ namespace Protocol16.Tests
                 0x80, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00,
                 0x02, 0x66, 0x40, 0xA3, 0x33, 0x33, 0xC0, 0xC0,
                 0x00, 0x00,
-            }, new [] { new [] {1f, 2f}, new [] {5.1f, -6f} });
+            }, new[] { new[] { 1f, 2f }, new[] { 5.1f, -6f } });
         }
 
         [Test]
