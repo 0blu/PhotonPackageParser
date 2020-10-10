@@ -5,7 +5,7 @@ A parser for [Photon's](https://www.photonengine.com/en-US/Photon) Protocol16.
 ## Requirements
 
 ### WinPcap
-This library requires [WinPcap](https://www.winpcap.org/) which comes with [Wireshark](https://www.wireshark.org/).
+This library requires [Npcap](https://nmap.org/npcap/dist/npcap-1.00.exe) which comes with [Wireshark](https://www.wireshark.org/).
 
 ## Example and usage:
 
