@@ -4,13 +4,14 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{4A73912F-6450-4BB1-85D8-5571AAFB94F6}</ProjectGuid>
+    <ProjectGuid>{F9674CFC-E2FC-447C-A3C0-211D167CA575}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>PhotonPackageParser.Example</RootNamespace>
     <AssemblyName>PhotonPackageParser.Example</AssemblyName>
     <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Deterministic>true</Deterministic>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -32,20 +33,27 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="PcapDotNet.Base, Version=0.10.0.20588, Culture=neutral, PublicKeyToken=4b6f3e583145a652, processorArchitecture=MSIL">
-      <HintPath>..\packages\PcapDotNet.0.10.2\lib\net40\PcapDotNet.Base.dll</HintPath>
+    <Reference Include="PacketDotNet, Version=1.1.1.0, Culture=neutral, PublicKeyToken=451414c7667b2a58, processorArchitecture=MSIL">
+      <HintPath>..\packages\PacketDotNet.1.1.1\lib\net45\PacketDotNet.dll</HintPath>
     </Reference>
-    <Reference Include="PcapDotNet.Core, Version=0.10.0.20632, Culture=neutral, PublicKeyToken=4b6f3e583145a652, processorArchitecture=x86">
-      <HintPath>..\packages\PcapDotNet.0.10.2\lib\net40\PcapDotNet.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="PcapDotNet.Core.Extensions, Version=0.10.0.20638, Culture=neutral, PublicKeyToken=4b6f3e583145a652, processorArchitecture=MSIL">
-      <HintPath>..\packages\PcapDotNet.0.10.2\lib\net40\PcapDotNet.Core.Extensions.dll</HintPath>
-    </Reference>
-    <Reference Include="PcapDotNet.Packets, Version=0.10.0.20603, Culture=neutral, PublicKeyToken=4b6f3e583145a652, processorArchitecture=MSIL">
-      <HintPath>..\packages\PcapDotNet.0.10.2\lib\net40\PcapDotNet.Packets.dll</HintPath>
+    <Reference Include="SharpPcap, Version=5.3.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\SharpPcap.5.3.0\lib\netstandard2.0\SharpPcap.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
+    </Reference>
     <Reference Include="System.Core" />
+    <Reference Include="System.Memory, Version=4.0.1.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Memory.4.5.4\lib\net461\System.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.6.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.4.7.0\lib\netstandard2.0\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />

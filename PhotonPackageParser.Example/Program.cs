@@ -1,18 +1,10 @@
-﻿using PcapDotNet.Core;
-using PcapDotNet.Packets;
-using PcapDotNet.Packets.IpV4;
-using PcapDotNet.Packets.Transport;
-using System.Linq;
+﻿using PacketDotNet;
+using SharpPcap;
 
 namespace PhotonPackageParser.Example
 {
     class Program
     {
-        public static void Main(string[] args)
-        {
-            new Program().Start();
-        }
-
         private readonly PhotonParser photonParser;
 
         public Program()
@@ -20,28 +12,27 @@ namespace PhotonPackageParser.Example
             photonParser = new ExampleParser();
         }
 
-        private void Start()
+        public static void Main(string[] args)
         {
-            var device = PacketDeviceSelector.AskForPacketDevice();
-            // var device = new OfflinePacketDevice("dump.pcap"); // Your wireshark dump (IT MUST BE *.pcap)
-
-            using (PacketCommunicator communicator = device.Open(65536, PacketDeviceOpenAttributes.Promiscuous, 1000))
-            {
-                communicator.ReceivePackets(0, PacketHandler);
-            }
+            new Program().Start();
         }
 
-        private void PacketHandler(Packet packet)
+        private void Start()
         {
-            IpV4Datagram ip = packet.Ethernet.IpV4;
-            UdpDatagram udp = ip.Udp;
+            ICaptureDevice device = PacketDeviceSelector.AskForPacketDevice();
 
-            if (udp == null || (udp.SourcePort != 5056 && udp.DestinationPort != 5056))
+            device.OnPacketArrival += new PacketArrivalEventHandler(PacketHandler);
+            device.Open(DeviceMode.Promiscuous, 1000);
+            device.StartCapture();
+        }
+
+        private void PacketHandler(object sender, CaptureEventArgs e)
+        {
+            UdpPacket packet = Packet.ParsePacket(e.Packet.LinkLayerType, e.Packet.Data).Extract<UdpPacket>();
+            if (packet != null && (packet.SourcePort == 5056 || packet.DestinationPort == 5056))
             {
-                return;
+                photonParser.ReceivePacket(packet.PayloadData);
             }
-
-            photonParser.ReceivePacket(udp.Payload.ToArray());
         }
     }
 }
