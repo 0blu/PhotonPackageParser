@@ -3,7 +3,6 @@ using Protocol16.Photon;
 
 namespace Protocol16.Tests
 {
-    [TestFixture]
     public class DeserializerTest
     {
         [Test]

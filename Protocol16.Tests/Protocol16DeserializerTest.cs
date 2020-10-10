@@ -1,12 +1,10 @@
 ﻿using NUnit.Framework;
-using System;
+using Protocol16.Photon;
 using System.Collections;
 using System.Collections.Generic;
-using Protocol16.Photon;
 
 namespace Protocol16.Tests
 {
-    [TestFixture]
     public class Protocol16DeserializerTest
     {
         [Test]
@@ -51,7 +49,7 @@ namespace Protocol16.Tests
                 0x79, 0x00, 0x02, 0x73, 0x00, 0x05, 0x74, 0x65,
                 0x73, 0x74, 0x31, 0x00, 0x05, 0x74, 0x65, 0x73,
                 0x74, 0x32,
-            }, new[] {"test1", "test2"});
+            }, new[] { "test1", "test2" });
         }
 
         [Test]
@@ -118,7 +116,7 @@ namespace Protocol16.Tests
                 0x79, 0x00, 0x04, 0x69, 0x00, 0x00, 0x00, 0x01,
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05,
                 0xFF, 0xFF, 0xFF, 0xFD,
-            }, new[] { 1, 0, 5, -3 });   
+            }, new[] { 1, 0, 5, -3 });
         }
 
         [Test]
@@ -166,7 +164,7 @@ namespace Protocol16.Tests
             {
                 0x79, 0x00, 0x02, 0x78, 0x00, 0x00, 0x00, 0x02,
                 0x01, 0x03, 0x00, 0x00, 0x00, 0x02, 0x04, 0x03,
-            }, new[] { new byte[] {1, 3}, new byte[] {4, 3} });
+            }, new[] { new byte[] { 1, 3 }, new byte[] { 4, 3 } });
         }
 
         [Test]
@@ -180,7 +178,7 @@ namespace Protocol16.Tests
                 0x00, 0x00, 0x00, 0x02,
             }, new[] { new[] { 1, 3 }, new[] { 4, 2 } });
         }
-        
+
         [Test]
         public void DeserializeObjectArray()
         {
@@ -310,7 +308,7 @@ namespace Protocol16.Tests
             Assert.AreEqual("test1", result.Parameters[0]);
             Assert.AreEqual("test2", result.Parameters[1]);
         }
-        
+
         private void TestDeserializeMethod(byte[] byteInput, object expected)
         {
             var input = new Protocol16Stream(byteInput);
