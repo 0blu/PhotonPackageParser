@@ -4,16 +4,13 @@
     <id>$id$</id>
     <version>$version$</version>
     <title>$title$</title>
-    <authors>$author$</authors>
+    <authors>$authors$</authors>
     <owners>$author$</owners>
-    <licenseUrl>https://github.com/0blu/PhotonPackageParser/blob/master/LICENSE</licenseUrl>
+    <license type="expression">MIT</license>
     <projectUrl>https://github.com/0blu/PhotonPackageParser</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>$description$</description>
     <copyright>$copyright$</copyright>
     <tags>Photon Unity3d Sniffing</tags>
   </metadata>
-  <files>
-    <file src="bin\Release\Protocol16.dll" target="lib/net471" />
-  </files>
 </package>
